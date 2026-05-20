@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import Navbar from './components/Navbar'
-import Home from './components/Home'
+import Home from './pages/Home'
 
 
 function App() {
@@ -10,10 +10,7 @@ function App() {
   return (
     <>
       <Navbar />
-
-      <main className="pt-5">
-        <Home />
-      </main>
+      <Home />
     </>
   )
 }

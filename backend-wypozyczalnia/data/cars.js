@@ -1,5 +1,6 @@
 const cars = [
   {
+    _id: "69e89badbb6bf7af5c3907d6",
     brand: "Toyota",
     model: "Corolla",
     category: "sedan",
@@ -9,9 +10,12 @@ const cars = [
     seats: 5,
     pricePerDay: 120,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1619767886558-efdc259cde1a"
+    imageUrl: "https://images.hgmsites.net/lrg/2021-toyota-corolla-xle-cvt-natl-angular-front-exterior-view_100754880_l.jpg",
+    createdAt: "2026-04-22T09:58:05.458Z",
+    updatedAt: "2026-04-22T09:58:05.458Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907d7",
     brand: "BMW",
     model: "3 Series",
     category: "sedan",
@@ -21,9 +25,12 @@ const cars = [
     seats: 5,
     pricePerDay: 220,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1555215695-3004980ad54c"
+    imageUrl: "https://images.hgmsites.net/lrg/2022-bmw-3-series-330e-xdrive-plug-in-hybrid-angular-front-exterior-view_100826982_l.jpg",
+    createdAt: "2026-04-22T09:58:05.459Z",
+    updatedAt: "2026-04-22T09:58:05.459Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907d8",
     brand: "Audi",
     model: "A4",
     category: "sedan",
@@ -33,9 +40,12 @@ const cars = [
     seats: 5,
     pricePerDay: 210,
     status: "rented",
-    imageUrl: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6"
+    imageUrl: "https://bmw-uzywane.com.pl/assets/photo/upload/cars/39167/vehicle_9a491-scale-1200-0.jpg",
+    createdAt: "2026-04-22T09:58:05.459Z",
+    updatedAt: "2026-04-22T09:58:05.459Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907d9",
     brand: "Mercedes",
     model: "C Class",
     category: "sedan",
@@ -45,9 +55,12 @@ const cars = [
     seats: 5,
     pricePerDay: 260,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8"
+    imageUrl: "https://i.gaw.to/vehicles/photos/40/31/403114-2023-mercedes-benz-c-class.jpg",
+    createdAt: "2026-04-22T09:58:05.459Z",
+    updatedAt: "2026-04-22T09:58:05.459Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907da",
     brand: "Tesla",
     model: "Model 3",
     category: "sedan",
@@ -57,9 +70,12 @@ const cars = [
     seats: 5,
     pricePerDay: 300,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1511396275273-2b5b9c1d1fcb"
+    imageUrl: "https://www.automoli.com/common/vehicles/_assets/img/gallery/f49/tesla-model-3-facelift-2023.jpg",
+    createdAt: "2026-04-22T09:58:05.459Z",
+    updatedAt: "2026-04-22T09:58:05.459Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907db",
     brand: "Volkswagen",
     model: "Golf",
     category: "hatchback",
@@ -69,9 +85,12 @@ const cars = [
     seats: 5,
     pricePerDay: 100,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1549921296-3a6b8c1a8d2d"
+    imageUrl: "https://carinvest-europe.com/image/cache/catalog/volkswagen/9/volkswagen-golf-2020-seryi-benzyn-28049-1-800x600.jpg",
+    createdAt: "2026-04-22T09:58:05.459Z",
+    updatedAt: "2026-04-22T09:58:05.459Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907dc",
     brand: "Ford",
     model: "Focus",
     category: "hatchback",
@@ -81,9 +100,12 @@ const cars = [
     seats: 5,
     pricePerDay: 90,
     status: "rented",
-    imageUrl: "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d"
+    imageUrl: "https://webapi.plichta.carsalesflow.pl/car-photo/100957/Mwg8a1l8TiLbbu3v.jpg",
+    createdAt: "2026-04-22T09:58:05.459Z",
+    updatedAt: "2026-04-22T09:58:05.459Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907dd",
     brand: "Hyundai",
     model: "i30",
     category: "hatchback",
@@ -93,9 +115,12 @@ const cars = [
     seats: 5,
     pricePerDay: 95,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1603386329225-868f9b1ee6f9"
+    imageUrl: "https://motofilm.pl/wp-content/uploads/2020/02/2021-.jpg",
+    createdAt: "2026-04-22T09:58:05.459Z",
+    updatedAt: "2026-04-22T09:58:05.459Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907de",
     brand: "Kia",
     model: "Ceed",
     category: "hatchback",
@@ -105,9 +130,12 @@ const cars = [
     seats: 5,
     pricePerDay: 110,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1590362891991-f776e747a588"
+    imageUrl: "https://poradnikbudowlany.eu/wp-content/uploads/2021/10/tytulowe-Resizer-750Q75.jpg",
+    createdAt: "2026-04-22T09:58:05.459Z",
+    updatedAt: "2026-04-22T09:58:05.459Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907df",
     brand: "Nissan",
     model: "Qashqai",
     category: "SUV",
@@ -117,9 +145,12 @@ const cars = [
     seats: 5,
     pricePerDay: 180,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2"
+    imageUrl: "https://www.dynamica.pl/wp-content/uploads/2024/04/AKOLIMPORT_5721608.jpg",
+    createdAt: "2026-04-22T09:58:05.459Z",
+    updatedAt: "2026-04-22T09:58:05.459Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907e0",
     brand: "Toyota",
     model: "RAV4",
     category: "SUV",
@@ -129,9 +160,12 @@ const cars = [
     seats: 5,
     pricePerDay: 200,
     status: "rented",
-    imageUrl: "https://images.unsplash.com/photo-1580273916550-e323be2ae537"
+    imageUrl: "https://d-art.ppstatic.pl/kadry/k/r/1/82/9b/63da6b1b17b55_o_full.jpg",
+    createdAt: "2026-04-22T09:58:05.460Z",
+    updatedAt: "2026-04-22T09:58:05.460Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907e1",
     brand: "BMW",
     model: "X5",
     category: "SUV",
@@ -141,9 +175,12 @@ const cars = [
     seats: 5,
     pricePerDay: 320,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1556189250-72ba954cfc2b"
+    imageUrl: "https://bmw-uzywane.com.pl/assets/photo/upload/cars/35077/vehicle_8b0a8-scale-1200-0.jpg",
+    createdAt: "2026-04-22T09:58:05.460Z",
+    updatedAt: "2026-04-22T09:58:05.460Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907e2",
     brand: "Audi",
     model: "Q7",
     category: "SUV",
@@ -153,9 +190,12 @@ const cars = [
     seats: 7,
     pricePerDay: 350,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1610647752706-3bb12232b3ab"
+    imageUrl: "https://www.premiumfelgi.pl/public/assets/Blog/Audi_Q7_Vossen_CV3-R_Silver/Audi_Q7_4M_Vossen_CV3-R_wheels_rims_felgi_01.JPG",
+    createdAt: "2026-04-22T09:58:05.460Z",
+    updatedAt: "2026-04-22T09:58:05.460Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907e3",
     brand: "Mercedes",
     model: "GLC",
     category: "SUV",
@@ -165,9 +205,12 @@ const cars = [
     seats: 5,
     pricePerDay: 300,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1626668893632-6f3a4466d22f"
+    imageUrl: "https://auto-planeta.pl/wp-content/uploads/2023/08/mercedes-glc-01.jpg",
+    createdAt: "2026-04-22T09:58:05.460Z",
+    updatedAt: "2026-04-22T09:58:05.460Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907e4",
     brand: "Ford",
     model: "Mustang",
     category: "coupe",
@@ -177,9 +220,12 @@ const cars = [
     seats: 4,
     pricePerDay: 400,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1553440569-bcc63803a83d"
+    imageUrl: "https://www.ford.pl/content/dam/guxeu/rhd/central/cars/S650-Mustang/my26/column_cards/ford-eu-S650_Nite_Pony_CG_Thumbnail_1000x667.jpg",
+    createdAt: "2026-04-22T09:58:05.460Z",
+    updatedAt: "2026-04-22T09:58:05.460Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907e5",
     brand: "Chevrolet",
     model: "Camaro",
     category: "coupe",
@@ -189,9 +235,12 @@ const cars = [
     seats: 4,
     pricePerDay: 380,
     status: "rented",
-    imageUrl: "https://images.unsplash.com/photo-1583121274602-3e2820c69888"
+    imageUrl: "https://hips.hearstapps.com/hmg-prod/images/2024-chevrolet-camaro-ss-collectors-edition-1-647e1933c6c20.jpg",
+    createdAt: "2026-04-22T09:58:05.460Z",
+    updatedAt: "2026-04-22T09:58:05.460Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907e6",
     brand: "Porsche",
     model: "911",
     category: "sport",
@@ -201,9 +250,12 @@ const cars = [
     seats: 2,
     pricePerDay: 700,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1503376780353-7e6692767b70"
+    imageUrl: "https://d-art.ppstatic.pl/kadry/k/r/1/b9/b1/625780326d022_o_full.jpg",
+    createdAt: "2026-04-22T09:58:05.460Z",
+    updatedAt: "2026-04-22T09:58:05.460Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907e7",
     brand: "Lamborghini",
     model: "Huracan",
     category: "sport",
@@ -213,9 +265,12 @@ const cars = [
     seats: 2,
     pricePerDay: 1200,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1511919884226-fd3cad34687c"
+    imageUrl: "https://www.kerbeckcars.com/imagetag/13175/2/l/New-2022-Lamborghini-Huracan-EVO-Spyder-RWD-1629323163.jpg",
+    createdAt: "2026-04-22T09:58:05.460Z",
+    updatedAt: "2026-04-22T09:58:05.460Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907e8",
     brand: "Renault",
     model: "Clio",
     category: "hatchback",
@@ -225,9 +280,12 @@ const cars = [
     seats: 5,
     pricePerDay: 80,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1583267746897-2cf415887172"
+    imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdSNL9c3G6xC2N4Rc2IFCm3WvHgUMt637DAg&s",
+    createdAt: "2026-04-22T09:58:05.460Z",
+    updatedAt: "2026-04-22T09:58:05.460Z"
   },
   {
+    _id: "69e89badbb6bf7af5c3907e9",
     brand: "Skoda",
     model: "Octavia",
     category: "sedan",
@@ -237,8 +295,10 @@ const cars = [
     seats: 5,
     pricePerDay: 150,
     status: "available",
-    imageUrl: "https://images.unsplash.com/photo-1609521263047-f8f205293f24"
+    imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsi7gfYCuabWympdd2UdElROQmZuqFuzYdLw&s",
+    createdAt: "2026-04-22T09:58:05.460Z",
+    updatedAt: "2026-04-22T09:58:05.460Z"
   }
 ];
 
-module.exports = cars;  
+module.exports = cars;
