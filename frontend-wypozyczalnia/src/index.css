@@ -1,0 +1,23 @@
+html,
+body,
+#root {
+	min-height: 100%;
+}
+
+body {
+	margin: 0;
+	background:
+		radial-gradient(circle at top, rgba(37, 99, 235, 0.12), transparent 32%),
+		linear-gradient(180deg, #020617 0%, #0f172a 100%);
+	color: #e2e8f0;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+img {
+	display: block;
+}
+
+.navbar {
+	backdrop-filter: blur(14px);
+}
