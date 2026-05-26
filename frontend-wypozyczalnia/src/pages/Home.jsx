@@ -46,7 +46,6 @@ export default function Home() {
         const list = Array.isArray(cars) ? [...cars] : []
         const q = String(searchQuery || '').trim().toLowerCase()
 
-        // filter by brand or model if query present
         const filtered = q
             ? list.filter((c) => {
                   const brand = String(c.brand || '')

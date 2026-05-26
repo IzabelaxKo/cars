@@ -67,7 +67,7 @@ export default function LoginPanel() {
             })
 
             setSuccess('Login successful. Redirecting to the fleet...')
-            window.setTimeout(() => navigate('/'), 400)
+            window.setTimeout(() => navigate('/', { replace: true }), 400)
         } catch (err) {
             setError(err.message || 'Login failed. Please try again.')
         } finally {
