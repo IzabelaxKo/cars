@@ -1,5 +1,5 @@
 import { StrictMode } from 'react'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'  
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
@@ -10,6 +10,7 @@ import RegisterPanel from './pages/RegisterPanel.jsx'
 import Footer from './components/Footer'
 import ReservationsForm from './pages/ReservationsForm.jsx'
 import UserPanel from './pages/UserPanel.jsx'
+import { isAdminSession } from './utils/authStorage'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -22,7 +23,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="/login" element={<LoginPanel />} />
             <Route path="/register" element={<RegisterPanel />} />
             <Route path="/reservations" element={<ReservationsForm />} />
-            <Route path="/panel" element={<UserPanel />} />
+            <Route path="/panel" element={isAdminSession() ? <Navigate to="/admin" replace /> : <UserPanel />} />
           </Routes>
         </div>
         <Footer />

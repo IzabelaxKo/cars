@@ -40,7 +40,43 @@ export default function AdminPanel() {
                 }
 
                 const data = await response.json()
-                setReservations(Array.isArray(data) ? data : [])
+                let nextReservations = Array.isArray(data) ? data : []
+
+                const unresolvedUserIds = [...new Set(
+                    nextReservations
+                        .map((reservation) => reservation?.clientUser)
+                        .filter((clientUser) => typeof clientUser === 'string' && clientUser)
+                )]
+
+                if (unresolvedUserIds.length > 0) {
+                    const usersResponse = await fetch(`${apiBaseUrl}/users`, {
+                        signal: controller.signal,
+                    })
+
+                    if (usersResponse.ok) {
+                        const users = await usersResponse.json()
+                        const userEmailById = new Map(
+                            (Array.isArray(users) ? users : []).map((user) => [String(user._id), user.email])
+                        )
+
+                        nextReservations = nextReservations.map((reservation) => {
+                            if (typeof reservation.clientUser !== 'string') {
+                                return reservation
+                            }
+
+                            const resolvedEmail = userEmailById.get(String(reservation.clientUser)) || ''
+                            return {
+                                ...reservation,
+                                clientUser: {
+                                    _id: reservation.clientUser,
+                                    email: resolvedEmail,
+                                },
+                            }
+                        })
+                    }
+                }
+
+                setReservations(nextReservations)
                 setError('')
             } catch (err) {
                 if (err.name !== 'AbortError') {
@@ -212,6 +248,7 @@ export default function AdminPanel() {
                                             const carLabel = reservation.car
                                                 ? `${reservation.car.brand ?? ''} ${reservation.car.model ?? ''}`.trim()
                                                 : 'Unknown car'
+                                            const customerEmail = reservation.clientUser?.email || reservation.clientEmail || 'No email'
                                             const isEditing = editingId === reservation._id
                                             const isCancelled = reservation.status === 'cancelled'
 
@@ -219,7 +256,7 @@ export default function AdminPanel() {
                                                 <tr key={reservation._id}>
                                                     <td>
                                                         <div className="fw-semibold">{reservation.clientSurname || 'Unknown user'}</div>
-                                                        <div className="text-white-50 small">{reservation.clientUser?.email || 'No email'}</div>
+                                                        <div className="text-white-50 small">{customerEmail}</div>
                                                     </td>
                                                     <td>
                                                         <div className="fw-semibold">{carLabel}</div>
