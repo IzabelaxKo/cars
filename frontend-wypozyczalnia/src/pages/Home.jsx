@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { isAdminSession, isLoggedIn } from '../utils/authStorage'
 import Navbar from '../components/Navbar'
@@ -6,22 +6,28 @@ import CarDetailsModal from '../components/CarDetailsModal'
 import { fetchJsonCached } from '../utils/api'
 
 function normalizeCar(car, index) {
+    const {
+        _id, id, brand, make, model, category, year, fuelType, gearbox, seats,
+        pricePerDay, reservations, reservationsCount, imageUrl, img, detailsLink, bookingLink,
+        createdAt, updatedAt
+    } = car || {}
+
     return {
-        id: car._id ?? car.id ?? index,
-        brand: car.brand ?? car.make ?? 'Unknown brand',
-        model: car.model ?? 'Unknown model',
-        category: car.category ?? 'Unknown category',
-        year: car.year ?? 'Unknown year',
-        fuelType: car.fuelType ?? 'Unknown fuel type',
-        gearbox: car.gearbox ?? 'Unknown transmission',
-        seats: car.seats ?? 'Unknown seats',
-        pricePerDay: car.pricePerDay ?? 'Unknown price',
-        reservationsCount: car.reservationsCount ?? (Array.isArray(car.reservations) ? car.reservations.length : (car.reservations ?? 0)),
-        imageUrl: car.imageUrl ?? car.img ?? '',
-        detailsLink: car._id ? `/cars/${car._id}` : car.detailsLink ?? '#',
-        bookingLink: car._id ? `/reservations?carId=${car._id}` : car.bookingLink ?? '#',
-        createdAt: car.createdAt,
-        updatedAt: car.updatedAt,
+        id: _id ?? id ?? index,
+        brand: brand ?? make ?? 'Unknown brand',
+        model: model ?? 'Unknown model',
+        category: category ?? 'Unknown category',
+        year: year ?? 'Unknown year',
+        fuelType: fuelType ?? 'Unknown fuel type',
+        gearbox: gearbox ?? 'Unknown transmission',
+        seats: seats ?? 'Unknown seats',
+        pricePerDay: pricePerDay ?? 'Unknown price',
+        reservationsCount: reservationsCount ?? (Array.isArray(reservations) ? reservations.length : (reservations ?? 0)),
+        imageUrl: imageUrl ?? img ?? '',
+        detailsLink: _id ? `/cars/${_id}` : detailsLink ?? '#',
+        bookingLink: _id ? `/reservations?carId=${_id}` : bookingLink ?? '#',
+        createdAt,
+        updatedAt,
     }
 }
 
@@ -33,47 +39,66 @@ export default function Home() {
     const isAdminUser = isAdminSession()
     const isLoggedInUser = isLoggedIn()
     const [selectedCar, setSelectedCar] = useState(null)
+    const [sortOption, setSortOption] = useState('default')
+    const [searchQuery, setSearchQuery] = useState('')
+
+    const sortedCars = useMemo(() => {
+        const list = Array.isArray(cars) ? [...cars] : []
+        const q = String(searchQuery || '').trim().toLowerCase()
+
+        // filter by brand or model if query present
+        const filtered = q
+            ? list.filter((c) => {
+                  const brand = String(c.brand || '')
+                  const model = String(c.model || '')
+                  return (brand + ' ' + model).toLowerCase().includes(q)
+              })
+            : list
+
+        const parsePrice = (v) => {
+            const n = parseFloat(String(v).replace(/[^0-9.-]+/g, ''))
+            return Number.isFinite(n) ? n : Infinity
+        }
+
+        switch (sortOption) {
+            case 'price-asc':
+                return filtered.sort((a, b) => parsePrice(a.pricePerDay) - parsePrice(b.pricePerDay))
+            case 'price-desc':
+                return filtered.sort((a, b) => parsePrice(b.pricePerDay) - parsePrice(a.pricePerDay))
+            case 'name-asc':
+                return filtered.sort((a, b) => (a.brand + ' ' + (a.model || '')).localeCompare(b.brand + ' ' + (b.model || '')))
+            case 'name-desc':
+                return filtered.sort((a, b) => (b.brand + ' ' + (b.model || '')).localeCompare(a.brand + ' ' + (a.model || '')))
+            default:
+                return filtered
+        }
+    }, [cars, sortOption, searchQuery])
 
     const handleBookingClick = () => {
-        if (!isLoggedInUser) {
-            alert('Please log in to view your bookings.')
-            navigate('/login')
-            return
-        }
-        if (isAdminUser) {
-            alert('Admin users do not have bookings. Please log in with a regular user account to view bookings.')
-            return
-        }
+        if (!isLoggedInUser) return navigate('/login', { state: { msg: 'Please log in to view your bookings.' } })
+        if (isAdminUser) return alert('Admin users do not have bookings. Use a regular account to view bookings.')
         navigate('/panel')
     }
 
-    const capitalize = (str) => String(str).charAt(0).toUpperCase() + String(str).slice(1)
+    const capitalize = (s) => typeof s === 'string' && s.length ? s.charAt(0).toUpperCase() + s.slice(1) : s
 
     useEffect(() => {
-        async function loadCars() {
+        let mounted = true
+        ;(async () => {
             try {
                 const data = await fetchJsonCached('/cars')
                 const normalizedCars = Array.isArray(data) ? data.map(normalizeCar) : []
-
-                if (normalizedCars.length > 0) {
-                    setCars(normalizedCars)
-                    setLoadError('')
-                } else {
-                    setCars([])
-                    setLoadError('No cars were returned from the API.')
-                }
+                if (!mounted) return
+                setCars(normalizedCars)
+                setLoadError(normalizedCars.length ? '' : 'No cars were returned from the API.')
             } catch (error) {
-                if (error.name !== 'AbortError') {
-                    setCars([])
-                    setLoadError('Could not reach the cars API.')
-                }
+                if (error.name !== 'AbortError' && mounted) setLoadError('Could not reach the cars API.')
             } finally {
-                setIsLoading(false)
+                if (mounted) setIsLoading(false)
             }
-        }
+        })()
 
-        loadCars()
-
+        return () => { mounted = false }
     }, [])
 
     return (
@@ -161,22 +186,33 @@ export default function Home() {
                         <h2 className="h1 fw-bold text-white mb-2">Available Fleet</h2>
                         <p className="text-white-50 mb-0">The best cars, transparent pricing, effortless booking.</p>
                     </div>
+                    <div className="ms-auto d-flex gap-2 align-items-center">
+                        <input
+                            className="form-control form-control-sm bg-black text-white border-secondary"
+                            placeholder="Search brand or model..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{ minWidth: '220px' }}
+                        />
+                        <select className="form-select form-select-sm bg-black text-white border-secondary" value={sortOption} onChange={(e) => setSortOption(e.target.value)} style={{ minWidth: '180px' }}>
+                            <option value="default">Sort: Default</option>
+                            <option value="price-asc">Price: Low → High</option>
+                            <option value="price-desc">Price: High → Low</option>
+                            <option value="name-asc">Name: A → Z</option>
+                            <option value="name-desc">Name: Z → A</option>
+                        </select>
+                    </div>
                 </div>
                 <div className="row g-4" id='fleet'>
                     {isLoading ? (
                         <div className="col-12">
                             <div className="alert alert-secondary mb-0">Loading cars from the API...</div>
                         </div>
-                    ) : cars.length > 0 ? (
-                        cars.map((car) => (
+                    ) : sortedCars.length > 0 ? (
+                        sortedCars.map((car) => (
                             <div className="col-lg-4 col-md-6" key={car.id}>
                                 <div className="card h-100 border border-secondary border-opacity-25 shadow-lg overflow-hidden bg-black bg-opacity-50 text-white">
-                                    <img
-                                        src={car.imageUrl}
-                                        className="card-img-top"
-                                        alt={`${car.make} ${car.model}`}
-                                        style={{ height: '240px', objectFit: 'cover' }}
-                                    />
+                                    <img src={car.imageUrl} className="card-img-top" alt={`${car.brand} ${car.model}`} style={{ height: '240px', objectFit: 'cover' }} />
                                     <div className="card-body p-4 d-flex flex-column">
                                         <div className="d-flex justify-content-between align-items-start mb-3">
                                             <div className="d-flex gap-2 align-items-center justify-content-between w-100">
@@ -220,9 +256,7 @@ export default function Home() {
                         </div>
                     )}
                 </div>
-                {selectedCar ? (
-                    <CarDetailsModal car={selectedCar} onClose={() => setSelectedCar(null)} isLoggedIn={isLoggedInUser} />
-                ) : null}
+                {selectedCar && <CarDetailsModal car={selectedCar} onClose={() => setSelectedCar(null)} isLoggedIn={isLoggedInUser} />}
             </div>
         </section>
     )
