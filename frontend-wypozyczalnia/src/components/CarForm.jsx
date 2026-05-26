@@ -1,6 +1,5 @@
 import { useState } from 'react'
-
-const apiBaseUrl = 'http://localhost:3000/api'
+import { fetchJson, invalidateApiCache } from '../utils/api'
 
 const emptyForm = {
     brand: '',
@@ -12,6 +11,17 @@ const emptyForm = {
     seats: '',
     pricePerDay: '',
     imageUrl: '',
+}
+
+const inputClassName = 'form-control bg-dark text-white border-secondary'
+
+function TextField({ label, wrapperClassName = 'col-12 col-md-6', className, ...props }) {
+    return (
+        <div className={wrapperClassName}>
+            <label className="form-label text-white-50 small mb-1">{label}</label>
+            <input {...props} className={className ? `${inputClassName} ${className}` : inputClassName} />
+        </div>
+    )
 }
 
 export default function CarForm({ open, onClose, onCreated }) {
@@ -52,7 +62,7 @@ export default function CarForm({ open, onClose, onCreated }) {
         setError('')
 
         try {
-            const response = await fetch(`${apiBaseUrl}/cars`, {
+            const newCar = await fetchJson('/cars', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -68,13 +78,8 @@ export default function CarForm({ open, onClose, onCreated }) {
                 }),
             })
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}))
-                throw new Error(errorData.message || 'Could not add car.')
-            }
-
-            const newCar = await response.json()
             onCreated?.(newCar)
+            invalidateApiCache('/cars')
             resetForm()
             onClose?.()
         } catch (err) {
@@ -87,47 +92,78 @@ export default function CarForm({ open, onClose, onCreated }) {
     return (
         <div className="card glass-card border border-secondary border-opacity-25 shadow-lg bg-black bg-opacity-50 text-white mb-4">
             <div className="card-body p-4 p-lg-5">
-                <div className="d-flex align-items-start justify-content-between gap-3 mb-3">
+                <div className="d-flex align-items-start justify-content-between gap-3 mb-4">
                     <div>
-                        <h2 className="h4 fw-semibold mb-1">Add car</h2>
-                        <p className="text-white-50 mb-0">Keep it simple and fill only the required fields.</p>
+                        <h2 className="h4 fw-semibold mb-1">Add a car</h2>
+                        <p className="text-white-50 mb-0">Keep the form short and fill only the required details.</p>
                     </div>
                     <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={onClose} />
                 </div>
 
-                {error ? <div className="alert alert-danger border-0 py-2">{error}</div> : null}
+                {error ? <div className="alert alert-danger border-0 py-2 mb-4">{error}</div> : null}
 
                 <form className="row g-3" onSubmit={handleSubmit}>
-                    <div className="col-md-4">
-                        <input className="form-control bg-black text-white border-secondary" placeholder="Brand" value={form.brand} onChange={(event) => updateField('brand', event.target.value)} />
-                    </div>
-                    <div className="col-md-4">
-                        <input className="form-control bg-black text-white border-secondary" placeholder="Model" value={form.model} onChange={(event) => updateField('model', event.target.value)} />
-                    </div>
-                    <div className="col-md-4">
-                        <input className="form-control bg-black text-white border-secondary" placeholder="Category" value={form.category} onChange={(event) => updateField('category', event.target.value)} />
-                    </div>
-                    <div className="col-md-3">
-                        <input type="number" className="form-control bg-black text-white border-secondary" placeholder="Year" value={form.year} onChange={(event) => updateField('year', event.target.value)} />
-                    </div>
-                    <div className="col-md-3">
-                        <input className="form-control bg-black text-white border-secondary" placeholder="Fuel type" value={form.fuelType} onChange={(event) => updateField('fuelType', event.target.value)} />
-                    </div>
-                    <div className="col-md-3">
-                        <input className="form-control bg-black text-white border-secondary" placeholder="Gearbox" value={form.gearbox} onChange={(event) => updateField('gearbox', event.target.value)} />
-                    </div>
-                    <div className="col-md-3">
-                        <input type="number" className="form-control bg-black text-white border-secondary" placeholder="Seats" value={form.seats} onChange={(event) => updateField('seats', event.target.value)} />
-                    </div>
-                    <div className="col-md-4">
-                        <input type="number" className="form-control bg-black text-white border-secondary" placeholder="Price per day" value={form.pricePerDay} onChange={(event) => updateField('pricePerDay', event.target.value)} />
-                    </div>
-                    <div className="col-md-8">
-                        <input className="form-control bg-black text-white border-secondary" placeholder="Image URL (optional)" value={form.imageUrl} onChange={(event) => updateField('imageUrl', event.target.value)} />
-                    </div>
-                    <div className="col-12 d-flex justify-content-end gap-2">
-                        <button type="button" className="btn btn-outline-light rounded-pill px-4" onClick={resetForm}>Clear</button>
-                        <button type="submit" className="btn btn-primary rounded-pill px-4" disabled={loading}>{loading ? 'Saving...' : 'Add car'}</button>
+                    <TextField
+                        label="Brand"
+                        value={form.brand}
+                        onChange={(event) => updateField('brand', event.target.value)}
+                    />
+                    <TextField
+                        label="Model"
+                        value={form.model}
+                        onChange={(event) => updateField('model', event.target.value)}
+                    />
+                    <TextField
+                        label="Category"
+                        value={form.category}
+                        onChange={(event) => updateField('category', event.target.value)}
+                    />
+                    <TextField
+                        label="Year"
+                        type="number"
+                        wrapperClassName="col-12 col-md-6"
+                        value={form.year}
+                        onChange={(event) => updateField('year', event.target.value)}
+                    />
+                    <TextField
+                        label="Fuel type"
+                        wrapperClassName="col-12 col-md-6"
+                        value={form.fuelType}
+                        onChange={(event) => updateField('fuelType', event.target.value)}
+                    />
+                    <TextField
+                        label="Gearbox"
+                        wrapperClassName="col-12 col-md-6"
+                        value={form.gearbox}
+                        onChange={(event) => updateField('gearbox', event.target.value)}
+                    />
+                    <TextField
+                        label="Seats"
+                        type="number"
+                        wrapperClassName="col-12 col-md-6"
+                        value={form.seats}
+                        onChange={(event) => updateField('seats', event.target.value)}
+                    />
+                    <TextField
+                        label="Price per day"
+                        type="number"
+                        wrapperClassName="col-12 col-md-6"
+                        value={form.pricePerDay}
+                        onChange={(event) => updateField('pricePerDay', event.target.value)}
+                    />
+                    <TextField
+                        label="Image URL"
+                        wrapperClassName="col-12"
+                        value={form.imageUrl}
+                        onChange={(event) => updateField('imageUrl', event.target.value)}
+                    />
+                    <div className="col-12 d-flex justify-content-end gap-2 pt-2">
+                        <button type="button" className="btn btn-outline-light rounded-pill px-4" onClick={resetForm}>
+                            Clear
+                        </button>
+                        <button type="submit" className="btn btn-primary rounded-pill px-4" disabled={loading}>
+                            {loading ? 'Saving...' : 'Add car'}
+                        </button>
                     </div>
                 </form>
             </div>

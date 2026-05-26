@@ -1,6 +1,5 @@
-import React, { useState } from 'react'
-
-const apiBaseUrl = 'http://localhost:3000/api'
+import { useState } from 'react'
+import { fetchJson } from '../utils/api'
 
 function formatDateISO(date) {
     const next = new Date(date)
@@ -74,12 +73,7 @@ export default function ReservationChecker({ carId, onRangeChange, onAvailabilit
         setLoading(true)
         try {
             const qs = new URLSearchParams({ carId, startDate: start.toISOString(), endDate: end.toISOString() })
-            const res = await fetch(`${apiBaseUrl}/reservations/availability/check?${qs.toString()}`)
-            if (!res.ok) {
-                const d = await res.json().catch(() => ({}))
-                throw new Error(d.message || `Availability check failed (${res.status})`)
-            }
-            const data = await res.json()
+            const data = await fetchJson(`/reservations/availability/check?${qs.toString()}`)
             const isAvailable = Boolean(data.available)
             setAvailable(isAvailable)
             onAvailabilityChange?.(isAvailable)

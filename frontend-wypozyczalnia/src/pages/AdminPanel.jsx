@@ -5,8 +5,7 @@ import CarForm from '../components/CarForm'
 import CarsTable from '../components/CarsTable'
 import ReservationTable from '../components/ReservationTable'
 import { isAdminSession, isLoggedIn } from '../utils/authStorage'
-
-const apiBaseUrl = 'http://localhost:3000/api'
+import { fetchJson, fetchJsonCached, invalidateApiCache } from '../utils/api'
 
 export default function AdminPanel() {
     const navigate = useNavigate()
@@ -29,18 +28,11 @@ export default function AdminPanel() {
             return
         }
 
-        const controller = new AbortController()
-
         async function loadCars() {
             setCarsLoading(true)
 
             try {
-                const response = await fetch(`${apiBaseUrl}/cars`, { signal: controller.signal })
-                if (!response.ok) {
-                    throw new Error('Could not load cars.')
-                }
-
-                const data = await response.json()
+                const data = await fetchJsonCached('/cars')
                 setCars(Array.isArray(data) ? data : [])
             } catch (err) {
                 if (err.name !== 'AbortError') {
@@ -56,12 +48,7 @@ export default function AdminPanel() {
             setReservationsLoading(true)
 
             try {
-                const response = await fetch(`${apiBaseUrl}/reservations`, { signal: controller.signal })
-                if (!response.ok) {
-                    throw new Error('Could not load reservations.')
-                }
-
-                const data = await response.json()
+                const data = await fetchJsonCached('/reservations')
                 let nextReservations = Array.isArray(data) ? data : []
 
                 const unresolvedUserIds = [...new Set(
@@ -71,28 +58,24 @@ export default function AdminPanel() {
                 )]
 
                 if (unresolvedUserIds.length > 0) {
-                    const usersResponse = await fetch(`${apiBaseUrl}/users`, { signal: controller.signal })
+                    const users = await fetchJsonCached('/users')
+                    const userEmailById = new Map(
+                        (Array.isArray(users) ? users : []).map((user) => [String(user._id), user.email])
+                    )
 
-                    if (usersResponse.ok) {
-                        const users = await usersResponse.json()
-                        const userEmailById = new Map(
-                            (Array.isArray(users) ? users : []).map((user) => [String(user._id), user.email])
-                        )
+                    nextReservations = nextReservations.map((reservation) => {
+                        if (typeof reservation.clientUser !== 'string') {
+                            return reservation
+                        }
 
-                        nextReservations = nextReservations.map((reservation) => {
-                            if (typeof reservation.clientUser !== 'string') {
-                                return reservation
-                            }
-
-                            return {
-                                ...reservation,
-                                clientUser: {
-                                    _id: reservation.clientUser,
-                                    email: userEmailById.get(String(reservation.clientUser)) || '',
-                                },
-                            }
-                        })
-                    }
+                        return {
+                            ...reservation,
+                            clientUser: {
+                                _id: reservation.clientUser,
+                                email: userEmailById.get(String(reservation.clientUser)) || '',
+                            },
+                        }
+                    })
                 }
 
                 setReservations(nextReservations)
@@ -109,8 +92,6 @@ export default function AdminPanel() {
         setError('')
         loadCars()
         loadReservations()
-
-        return () => controller.abort()
     }, [isLoggedInUser, isAdminUser])
 
     function openCarForm() {
@@ -124,13 +105,9 @@ export default function AdminPanel() {
         }
 
         try {
-            const response = await fetch(`${apiBaseUrl}/cars/${car._id}`, { method: 'DELETE' })
+            await fetchJson(`/cars/${car._id}`, { method: 'DELETE' })
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}))
-                throw new Error(errorData.message || 'Could not delete car.')
-            }
-
+            invalidateApiCache('/cars')
             setCars((current) => current.filter((item) => item._id !== car._id))
         } catch (err) {
             setError(err.message || 'Could not delete car.')
@@ -165,7 +142,7 @@ export default function AdminPanel() {
         setSavingId(reservationId)
 
         try {
-            const response = await fetch(`${apiBaseUrl}/reservations/${reservationId}`, {
+            const updatedReservation = await fetchJson(`/reservations/${reservationId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -173,13 +150,7 @@ export default function AdminPanel() {
                     endDate: draftDates.endDate,
                 }),
             })
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}))
-                throw new Error(errorData.message || 'Could not update reservation.')
-            }
-
-            const updatedReservation = await response.json()
+            invalidateApiCache('/reservations')
             setReservations((current) =>
                 current.map((reservation) => (reservation._id === reservationId ? updatedReservation : reservation))
             )
@@ -197,18 +168,12 @@ export default function AdminPanel() {
         }
 
         try {
-            const response = await fetch(`${apiBaseUrl}/reservations/${reservationId}`, {
+            const updatedReservation = await fetchJson(`/reservations/${reservationId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: 'cancelled' }),
             })
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}))
-                throw new Error(errorData.message || 'Could not cancel reservation.')
-            }
-
-            const updatedReservation = await response.json()
+            invalidateApiCache('/reservations')
             setReservations((current) =>
                 current.map((reservation) => (reservation._id === reservationId ? updatedReservation : reservation))
             )
@@ -223,9 +188,9 @@ export default function AdminPanel() {
 
     if (!isLoggedInUser || !isAdminUser) {
         return (
-            <main className="app-shell py-5 h-100 pb-0">
+            <main className="app-shell h-100">
                 <Navbar />
-                <div className="container py-4 py-lg-5 mt-4">
+                <div className="container py-4 py-lg-5">
                     <div className="card glass-card border border-danger border-opacity-50 shadow-lg bg-black bg-opacity-50 text-white">
                         <div className="card-body p-4 p-lg-5">
                             <p className="text-uppercase text-white-50 small fw-semibold mb-2">Admin access only</p>
@@ -240,9 +205,9 @@ export default function AdminPanel() {
     }
 
     return (
-        <main className="app-shell py-5 h-100 pb-0">
+        <main className="app-shell h-100">
             <Navbar />
-            <div className="container py-4 py-lg-5 mt-4">
+            <div className="container py-4 py-lg-5">
                 <div className="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
                     <div>
                         <h1 className="display-5 fw-bold text-white mb-2">Cars and reservations</h1>

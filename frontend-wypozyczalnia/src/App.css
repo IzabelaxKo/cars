@@ -3,7 +3,9 @@
 	display: block;
 	width: 100%;
 	min-height: 100vh;
-	overflow: hidden;
+	overflow-x: clip;
+	padding-top: 5.25rem;
+	padding-bottom: 2rem;
 }
 
 .app-shell::before,
@@ -33,6 +35,13 @@
 }
 
 .glass-card {
+	backdrop-filter: blur(14px);
+}
+
+.dropdown-panel {
+	min-width: 220px;
+	z-index: 1050;
+	background: rgba(2, 6, 23, 0.92);
 	backdrop-filter: blur(14px);
 }
 

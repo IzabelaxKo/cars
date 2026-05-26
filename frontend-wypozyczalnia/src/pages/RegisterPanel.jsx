@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { isLoggedIn } from '../utils/authStorage'
-
-const apiBaseUrl = 'http://localhost:3000/api'
+import { fetchJson } from '../utils/api'
 
 export default function RegisterPanel() {
     const navigate = useNavigate()
@@ -27,16 +26,11 @@ export default function RegisterPanel() {
 
     async function registerUser(details) {
         try {
-            const response = await fetch(`${apiBaseUrl}/users/register`, {
+            return await fetchJson('/users/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(details),
             })
-            if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.message || 'Registration failed. Please try again.')
-            }
-            return response.json()
         } catch (error) {
             throw new Error(error instanceof Error ? error.message : 'An unexpected error occurred.', {
                 cause: error,
@@ -90,9 +84,9 @@ export default function RegisterPanel() {
     }
 
     return (
-        <main className="app-shell py-5 h-100 pb-0">
+        <main className="app-shell h-100">
             <Navbar />
-            <div className="container py-4 mt-4 mb-4 py-lg-5">
+            <div className="container py-4 py-lg-5">
                 <div className="row justify-content-center align-items-center g-4 g-lg-5">
                     <div className="col-lg-5 order-lg-2">
                         <div className="auth-copy mb-4 mb-lg-0">

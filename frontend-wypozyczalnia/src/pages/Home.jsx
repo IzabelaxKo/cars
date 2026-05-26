@@ -3,8 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { isAdminSession, isLoggedIn } from '../utils/authStorage'
 import Navbar from '../components/Navbar'
 import CarDetailsModal from '../components/CarDetailsModal'
-
-const apiBaseUrl = 'http://localhost:3000/api'
+import { fetchJsonCached } from '../utils/api'
 
 function normalizeCar(car, index) {
     return {
@@ -48,20 +47,12 @@ export default function Home() {
         navigate('/panel')
     }
 
-    const capitalize = (str) => String(str).charAt(0).toUpperCase() + String(str).slice(1);
+    const capitalize = (str) => String(str).charAt(0).toUpperCase() + String(str).slice(1)
 
     useEffect(() => {
-        const controller = new AbortController()
-
         async function loadCars() {
             try {
-                const response = await fetch(`${apiBaseUrl}/cars`, { signal: controller.signal })
-
-                if (!response.ok) {
-                    throw new Error(`Request failed with status ${response.status}`)
-                }
-
-                const data = await response.json()
+                const data = await fetchJsonCached('/cars')
                 const normalizedCars = Array.isArray(data) ? data.map(normalizeCar) : []
 
                 if (normalizedCars.length > 0) {
@@ -83,11 +74,10 @@ export default function Home() {
 
         loadCars()
 
-        return () => controller.abort()
     }, [])
 
     return (
-        <section className="py-5 mt-4 ">
+        <section className="app-shell">
             <Navbar />
             <div className="container py-4 py-lg-5">
                 <div className="row align-items-center g-4 g-lg-5 mb-5">

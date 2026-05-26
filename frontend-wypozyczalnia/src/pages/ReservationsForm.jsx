@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { AUTH_KEYS, getAuthValue, saveAuthSession, isAdminSession, isLoggedIn } from '../utils/authStorage'
-
-const apiBaseUrl = 'http://localhost:3000/api'
+import { fetchJson, fetchJsonCached, invalidateApiCache } from '../utils/api'
 
 function formatCarLabel(car) {
     if (!car) {
@@ -42,9 +41,7 @@ export default function ReservationsForm() {
             if (!isLoggedInUser || resolvedUserId) return
             if (!currentUserEmail) return
             try {
-                const resp = await fetch(`${apiBaseUrl}/users/email/${encodeURIComponent(currentUserEmail)}`)
-                if (!resp.ok) return
-                const user = await resp.json()
+                const user = await fetchJsonCached(`/users/email/${encodeURIComponent(currentUserEmail)}`)
                 if (user && user._id && !cancelled) {
                     setResolvedUserId(user._id)
                     try {
@@ -62,17 +59,9 @@ export default function ReservationsForm() {
     }, [isLoggedInUser, resolvedUserId, currentUserEmail])
 
     useEffect(() => {
-        const controller = new AbortController()
-
         async function loadCars() {
             try {
-                const response = await fetch(`${apiBaseUrl}/cars`, { signal: controller.signal })
-
-                if (!response.ok) {
-                    throw new Error(`Request failed with status ${response.status}`)
-                }
-
-                const data = await response.json()
+                const data = await fetchJsonCached('/cars')
                 setCars(Array.isArray(data) ? data : [])
                 setLoadError('')
             } catch (error) {
@@ -86,8 +75,6 @@ export default function ReservationsForm() {
         }
 
         loadCars()
-
-        return () => controller.abort()
     }, [])
 
     const selectedCar = useMemo(
@@ -207,7 +194,7 @@ export default function ReservationsForm() {
         }
 
         try {
-            const response = await fetch(`${apiBaseUrl}/reservations`, {
+            const createdReservation = await fetchJson('/reservations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -218,13 +205,7 @@ export default function ReservationsForm() {
                     endDate: formData.endDate,
                 }),
             })
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}))
-                throw new Error(errorData.message || 'Reservation could not be created.')
-            }
-
-            const createdReservation = await response.json()
+            invalidateApiCache('/reservations')
             setSubmitSuccess('Reservation created successfully. Redirecting to your panel...')
             setFormData({
                 carId: '',
@@ -241,9 +222,9 @@ export default function ReservationsForm() {
     }
 
     return (
-        <main className="app-shell py-5 h-100 pb-0">
+        <main className="app-shell h-100">
             <Navbar />
-            <div className="container py-4 mt-4 mb-4 py-lg-5">
+            <div className="container py-4 py-lg-5">
                 <div className="row justify-content-center align-items-center g-4 g-lg-5">
                     <div className="col-lg-5">
                         <div className="auth-copy mb-4 mb-lg-0">

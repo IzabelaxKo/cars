@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import ReservationTable from '../components/ReservationTable'
 import { AUTH_KEYS, getAuthValue, isLoggedIn, saveAuthSession } from '../utils/authStorage'
-
-const apiBaseUrl = 'http://localhost:3000/api'
+import { fetchJson, fetchJsonCached, invalidateApiCache } from '../utils/api'
 
 export default function UserPanel() {
     const navigate = useNavigate()
@@ -29,12 +28,7 @@ export default function UserPanel() {
 
         async function resolveUserId() {
             try {
-                const response = await fetch(`${apiBaseUrl}/users/email/${encodeURIComponent(userEmail)}`)
-                if (!response.ok) {
-                    return
-                }
-
-                const user = await response.json()
+                const user = await fetchJsonCached(`/users/email/${encodeURIComponent(userEmail)}`)
                 if (user?._id && !cancelled) {
                     setUserId(user._id)
                     saveAuthSession({ [AUTH_KEYS.userId]: user._id })
@@ -54,21 +48,11 @@ export default function UserPanel() {
             return
         }
 
-        const controller = new AbortController()
-
         async function loadReservations() {
             setLoading(true)
 
             try {
-                const response = await fetch(`${apiBaseUrl}/reservations?userId=${encodeURIComponent(userId)}`, {
-                    signal: controller.signal,
-                })
-
-                if (!response.ok) {
-                    throw new Error('Could not load reservations.')
-                }
-
-                const data = await response.json()
+                const data = await fetchJsonCached(`/reservations?userId=${encodeURIComponent(userId)}`)
                 setReservations(Array.isArray(data) ? data : [])
             } catch (err) {
                 if (err.name !== 'AbortError') {
@@ -82,8 +66,6 @@ export default function UserPanel() {
 
         setError('')
         loadReservations()
-
-        return () => controller.abort()
     }, [isLoggedInUser, userId])
 
     function startEditing(reservation) {
@@ -106,14 +88,9 @@ export default function UserPanel() {
         }
 
         try {
-            const response = await fetch(`${apiBaseUrl}/reservations/${reservationId}`, {
-                method: 'DELETE',
-            })
+            await fetchJson(`/reservations/${reservationId}`, { method: 'DELETE' })
 
-            if (!response.ok) {
-                throw new Error('Could not delete reservation.')
-            }
-
+            invalidateApiCache('/reservations')
             setReservations((current) => current.filter((reservation) => reservation._id !== reservationId))
             if (editingId === reservationId) {
                 cancelEditing()
@@ -137,7 +114,7 @@ export default function UserPanel() {
         setSavingId(reservationId)
 
         try {
-            const response = await fetch(`${apiBaseUrl}/reservations/${reservationId}`, {
+            const updatedReservation = await fetchJson(`/reservations/${reservationId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -145,13 +122,7 @@ export default function UserPanel() {
                     endDate: draftDates.endDate,
                 }),
             })
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}))
-                throw new Error(errorData.message || 'Could not update reservation.')
-            }
-
-            const updatedReservation = await response.json()
+            invalidateApiCache('/reservations')
             setReservations((current) =>
                 current.map((reservation) => (reservation._id === reservationId ? updatedReservation : reservation))
             )
@@ -165,9 +136,9 @@ export default function UserPanel() {
 
     if (!isLoggedInUser) {
         return (
-            <main className="app-shell py-5 h-100 pb-0">
+            <main className="app-shell h-100">
                 <Navbar />
-                <div className="container py-4 py-lg-5 mt-4">
+                <div className="container py-4 py-lg-5">
                     <div className="card glass-card border border-secondary border-opacity-25 shadow-lg bg-black bg-opacity-50 text-white">
                         <div className="card-body p-4 p-lg-5">
                             <p className="text-uppercase text-white-50 small fw-semibold mb-2">User panel</p>
@@ -182,9 +153,9 @@ export default function UserPanel() {
     }
 
     return (
-        <main className="app-shell py-5 h-100 w-100 pb-0">
+        <main className="app-shell h-100">
             <Navbar />
-            <div className="container py-4 py-lg-5 mt-4">
+            <div className="container py-4 py-lg-5">
                 <div className="row align-items-end g-4 mb-4">
                     <div className="col-lg-8">
                         <span className="badge text-bg-dark border border-secondary border-opacity-25 text-uppercase fw-semibold px-3 py-2 mb-3">Your bookings</span>

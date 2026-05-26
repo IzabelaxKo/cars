@@ -8,7 +8,7 @@ export default function CarsTable({ cars, loading, onDeleteCar }) {
     }
 
     return (
-        <div className="table-responsive">
+        <div className="table-responsive p-2">
             <table className="table table-dark table-hover align-middle mb-0 app-table">
                 <thead>
                     <tr>

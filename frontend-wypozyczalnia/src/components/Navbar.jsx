@@ -17,7 +17,7 @@ export default function Navbar() {
 
     return (
         <nav className="navbar navbar-expand-lg navbar-dark fixed-top w-100 border-bottom border-secondary border-opacity-25 bg-black bg-opacity-75">
-            <div className="container-fluid ps-4 ps-lg-5 p-0">
+            <div className="container-fluid px-4 px-lg-5 py-3">
                 <Link className="navbar-brand fw-bold text-uppercase" to="/">
                     Car Rental
                 </Link>
@@ -33,24 +33,25 @@ export default function Navbar() {
                         </>
                     ) : (
                         <>
-                            <button 
+                            <button
                                 className="btn btn-primary btn-sm fw-semibold d-flex align-items-center justify-content-center me-1 rounded-circle"
                                 onClick={() => setMenuOpen(!menuOpen)}
                                 aria-label={userName}
                                 style={{ minWidth: '40px', minHeight: '40px', padding: 0 }}
-                            > <i className="bi bi-person"></i>
+                            >
+                                <i className="bi bi-person"></i>
                             </button>
                             {menuOpen && (
-                                <div className="position-absolute top-100 end-0 border border-secondary rounded shadow-lg p-2 mt-3" style={{ zIndex: 1000, minWidth: '220px', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                                <div className="dropdown-panel position-absolute top-100 end-0 border border-secondary border-opacity-25 rounded-4 shadow-lg p-2 mt-3">
                                     <div className="text-white-50 small px-2 py-1 mb-2">{userName}</div>
-                                    <Link 
+                                    <Link
                                         className="btn btn-sm btn-outline-secondary w-100 mb-2 text-white"
                                         to={isAdminUser ? '/admin' : '/panel'}
                                         onClick={() => setMenuOpen(false)}
                                     >
                                         {isAdminUser ? 'Admin Panel' : 'Your Bookings'}
                                     </Link>
-                                    <button 
+                                    <button
                                         className="btn btn-sm btn-outline-danger w-100"
                                         onClick={handleLogout}
                                     >

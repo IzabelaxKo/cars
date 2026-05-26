@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { isLoggedIn, saveAuthSession } from '../utils/authStorage'
-
-const apiBaseUrl = 'http://localhost:3000/api'
+import { fetchJson } from '../utils/api'
 
 export default function LoginPanel() {
     const navigate = useNavigate()
@@ -22,18 +21,11 @@ export default function LoginPanel() {
 
     async function loginUser(credentials) {
         try {
-            const response = await fetch(`${apiBaseUrl}/users/login`, {
+            return await fetchJson('/users/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(credentials),
             })
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}))
-                throw new Error(errorData.message || 'Login failed. Please try again.')
-            }
-
-            return response.json()
         } catch (error) {
             console.error('Login error:', error)
             throw new Error(error instanceof Error ? error.message : 'An error occurred while trying to log in. Please try again later.', {
@@ -84,9 +76,9 @@ export default function LoginPanel() {
     }
 
     return (
-        <main className="app-shell py-5 h-100 pb-0">
+        <main className="app-shell h-100">
             <Navbar />
-            <div className="container mt-4 py-4 py-lg-5 vw-100 h-100 d-flex align-items-center justify-content-center">
+            <div className="container py-4 py-lg-5 h-100 d-flex align-items-center justify-content-center">
                 <div className="row justify-content-center align-items-center g-4 g-lg-5">
                     <div className="col-lg-5">
                         <div className="auth-copy mb-4 mb-lg-0">
