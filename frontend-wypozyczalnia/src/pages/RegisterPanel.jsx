@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import { saveAuthSession } from '../utils/authStorage'
 
 export default function RegisterPanel() {
     const navigate = useNavigate()
@@ -51,10 +52,12 @@ export default function RegisterPanel() {
         setIsSubmitting(true)
 
         window.setTimeout(() => {
-            localStorage.setItem('token', 'user-session-token')
-            localStorage.setItem('role', 'user')
-            localStorage.setItem('userName', formData.fullName.trim())
-            localStorage.setItem('userEmail', formData.email.trim())
+            saveAuthSession({
+                token: 'user-session-token',
+                role: 'user',
+                userName: formData.fullName.trim(),
+                userEmail: formData.email.trim(),
+            })
 
             setSuccess('Account created successfully. Redirecting to the fleet...')
             setIsSubmitting(false)
@@ -63,9 +66,9 @@ export default function RegisterPanel() {
     }
 
     return (
-        <main className="auth-page py-5">
+        <main className="auth-page py-5 h-100 pb-0">
             <Navbar />
-            <div className="container py-4 mt-4 py-lg-5">
+            <div className="container py-4 mt-4 mb-4 py-lg-5">
                 <div className="row justify-content-center align-items-center g-4 g-lg-5">
                     <div className="col-lg-5 order-lg-2">
                         <div className="auth-copy mb-4 mb-lg-0">
@@ -79,9 +82,9 @@ export default function RegisterPanel() {
                             <div className="auth-quick-card rounded-4 border border-secondary border-opacity-25 p-4">
                                 <div className="text-uppercase small text-white-50 fw-semibold mb-2">Included by default</div>
                                 <ul className="list-unstyled mb-0 text-white-75">
-                                    <li className="mb-2">Personal booking history</li>
-                                    <li className="mb-2">Faster checkout on your next rental</li>
-                                    <li>Simple account setup for end users</li>
+                                    <li className="mb-2 ms-2 text-light">Personal booking history</li>
+                                    <li className="mb-2 ms-2 text-light">Faster checkout on your next rental</li>
+                                    <li className="mb-2 ms-2 text-light">Simple account setup for end users</li>
                                 </ul>
                             </div>
                         </div>

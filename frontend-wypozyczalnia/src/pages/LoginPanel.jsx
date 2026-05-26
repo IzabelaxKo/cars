@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import { saveAuthSession } from '../utils/authStorage'
+
+const apiBaseUrl = 'http://localhost:3000/api'  
 
 export default function LoginPanel() {
     const navigate = useNavigate()
@@ -17,7 +20,27 @@ export default function LoginPanel() {
         }))
     }
 
-    function handleSubmit(event) {
+    async function loginUser(credentials) {
+        try {
+            const response = await fetch(`${apiBaseUrl}/users/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(credentials),
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}))
+                throw new Error(errorData.message || 'Login failed. Please try again.')
+            }
+
+            return response.json()
+        } catch (error) {
+            console.error('Login error:', error)
+            throw new Error(error.message || 'An error occurred while trying to log in. Please try again later.')
+        }
+    }
+
+    async function handleSubmit(event) {
         event.preventDefault()
         setError('')
         setSuccess('')
@@ -29,27 +52,34 @@ export default function LoginPanel() {
 
         setIsSubmitting(true)
 
-        window.setTimeout(() => {
-            localStorage.setItem('token', 'user-session-token')
-            localStorage.setItem('role', 'user')
-            localStorage.setItem('userEmail', formData.email.trim())
+        window.setTimeout(async () => {
+            try {
+                const data = await loginUser({ email: formData.email, password: formData.password })
 
-            if (formData.rememberMe) {
-                localStorage.setItem('rememberMe', 'true')
-            } else {
-                localStorage.removeItem('rememberMe')
+                saveAuthSession({
+                    token: data.token,
+                    userId: data.userId,
+                    role: data.role,
+                    userRole: data.userRole,
+                    isAdmin: data.isAdmin,
+                    userName: data.userName,
+                    userEmail: data.userEmail ?? formData.email,
+                })
+
+                setSuccess('Login successful. Redirecting to the fleet...')
+                setIsSubmitting(false)
+                navigate('/')
+            } catch (err) {
+                setError(err.message || 'Login failed. Please try again.')
+                setIsSubmitting(false)
             }
-
-            setSuccess('Login successful. Redirecting to the fleet...')
-            setIsSubmitting(false)
-            navigate('/')
         }, 400)
     }
 
     return (
-        <main className="auth-page py-5">
+        <main className="auth-page py-5 h-100 pb-0">
             <Navbar />
-            <div className="container mt-4 py-4 py-lg-5">
+            <div className="container mt-4 py-4 py-lg-5 vw-100 h-100 d-flex align-items-center justify-content-center">
                 <div className="row justify-content-center align-items-center g-4 g-lg-5">
                     <div className="col-lg-5">
                         <div className="auth-copy mb-4 mb-lg-0">
@@ -63,14 +93,13 @@ export default function LoginPanel() {
                             <div className="auth-quick-card rounded-4 border border-secondary border-opacity-25 p-4">
                                 <div className="text-uppercase small text-white-50 fw-semibold mb-2">What you can do</div>
                                 <ul className="list-unstyled mb-0 text-white-75">
-                                    <li className="mb-2">View available cars and current pricing</li>
-                                    <li className="mb-2">Track upcoming reservations</li>
-                                    <li>Keep your profile ready for faster bookings</li>
+                                    <li className="mb-2 ms-2 text-light">View available cars and current pricing</li>
+                                    <li className="mb-2 ms-2 text-light">Track upcoming reservations</li>
+                                    <li className="mb-2 ms-2 text-light">Keep your profile ready for faster bookings</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
-
                     <div className="col-lg-5">
                         <div className="card auth-card border border-secondary border-opacity-25 shadow-lg bg-black bg-opacity-75 text-white overflow-hidden">
                             <div className="card-body p-4 p-md-5">

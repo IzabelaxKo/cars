@@ -1,18 +1,8 @@
 import { useEffect, useState } from 'react'
+import { isAdminSession } from '../utils/authStorage'
 
 const apiBaseUrl = 'http://localhost:3000/api'
 
-const fallbackImageByIndex = [
-    'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1549399542-7e1f0b1e0f3b?auto=format&fit=crop&w=900&q=80',
-]
-
-function toTitleCase(value) {
-    return String(value || '')
-        .replace(/[_-]/g, ' ')
-        .replace(/\b\w/g, (letter) => letter.toUpperCase())
-}
 
 function normalizeCar(car, index) {
     return {
@@ -21,11 +11,11 @@ function normalizeCar(car, index) {
         model: car.model ?? 'Unknown model',
         category: car.category ?? 'Unknown category',  
         year: car.year ?? 'Unknown year',
-        fuelType: car.fuelType ? toTitleCase(car.fuelType) : 'Unknown fuel type',
-        gearbox: car.gearbox ? toTitleCase(car.gearbox) : 'Unknown transmission',
+        fuelType: car.fuelType ? car.fuelType.toUpperCase() : 'Unknown fuel type',
+        gearbox: car.gearbox ? car.gearbox.toUpperCase() : 'Unknown transmission',
         seats: car.seats ?? 'Unknown seats',
         pricePerDay: car.pricePerDay ?? 'Unknown price',
-        status: car.status ? toTitleCase(car.status) : 'Unknown status',
+        status: car.status ? car.status.toUpperCase() : 'Unknown status',
         imageUrl: car.imageUrl ?? car.img ?? fallbackImageByIndex[index % fallbackImageByIndex.length],
         detailsLink: car._id ? `/cars/${car._id}` : car.detailsLink ?? '#',
         bookingLink: car._id ? `/booking/${car._id}` : car.bookingLink ?? '#',
@@ -37,7 +27,7 @@ export default function Home() {
     const [isLoading, setIsLoading] = useState(true)
     const [loadError, setLoadError] = useState('')
 
-    const isAdminUser = localStorage.getItem('role') === 'admin' || localStorage.getItem('userRole') === 'admin' || localStorage.getItem('isAdmin') === 'true'
+    const isAdminUser = isAdminSession()
 
     useEffect(() => {
         const controller = new AbortController()
@@ -76,7 +66,7 @@ export default function Home() {
     }, [])
 
     return (
-        <section className="py-5 mt-4">
+        <section className="py-5 mt-4 ">
             <div className="container py-4 py-lg-5">
                 <div className="row align-items-center g-4 g-lg-5 mb-5">
                     <div className="col-lg-6">
@@ -91,10 +81,11 @@ export default function Home() {
                         </p>
                         <div className="d-flex flex-wrap gap-3 mb-4">
                             <button className="btn btn-primary btn-lg rounded-pill px-4 fw-semibold">
-                                Browse fleet
+                                <a href="#fleet" className='text-light text-decoration-none'>Browse fleet</a>
                             </button>
                             <button className="btn btn-outline-secondary btn-lg rounded-pill px-4 fw-semibold text-white border-secondary">
                                 View booking
+                                {/* if not logged in -> show login modal else -> show booking user panel */}
                             </button>
                         </div>
                         <div className="row g-3">
@@ -161,7 +152,7 @@ export default function Home() {
                         <p className="text-white-50 mb-0">Premium cars, transparent pricing, effortless booking.</p>
                     </div>
                 </div>
-                <div className="row g-4">
+                <div className="row g-4" id='fleet'>
                     {isLoading ? (
                         <div className="col-12">
                             <div className="alert alert-secondary mb-0">Loading cars from the API...</div>

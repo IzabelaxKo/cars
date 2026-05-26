@@ -1,5 +1,7 @@
+import { isAdminSession } from '../utils/authStorage'
+
 export default function Navbar() {
-  const isAdminUser = localStorage.getItem('role') === 'admin' || localStorage.getItem('userRole') === 'admin' || localStorage.getItem('isAdmin') === 'true'
+  const isAdminUser = isAdminSession()
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark fixed-top w-100 border-bottom border-secondary border-opacity-25 bg-black bg-opacity-75">
