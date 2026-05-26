@@ -11,6 +11,7 @@ import Footer from './components/Footer'
 import ReservationsForm from './pages/ReservationsForm.jsx'
 import UserPanel from './pages/UserPanel.jsx'
 import { isAdminSession } from './utils/authStorage'
+import 'bootstrap-icons/font/bootstrap-icons.css';   
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
