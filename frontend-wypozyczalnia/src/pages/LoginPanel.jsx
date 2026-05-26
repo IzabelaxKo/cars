@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import { saveAuthSession } from '../utils/authStorage'
+import { isLoggedIn, saveAuthSession } from '../utils/authStorage'
 
-const apiBaseUrl = 'http://localhost:3000/api'  
+const apiBaseUrl = 'http://localhost:3000/api'
 
 export default function LoginPanel() {
     const navigate = useNavigate()
@@ -36,7 +36,9 @@ export default function LoginPanel() {
             return response.json()
         } catch (error) {
             console.error('Login error:', error)
-            throw new Error(error.message || 'An error occurred while trying to log in. Please try again later.')
+            throw new Error(error instanceof Error ? error.message : 'An error occurred while trying to log in. Please try again later.', {
+                cause: error,
+            })
         }
     }
 
@@ -45,6 +47,13 @@ export default function LoginPanel() {
         setError('')
         setSuccess('')
 
+        if (isLoggedIn()) {
+            setError('You are already logged in.')
+            alert('You are already logged in. Please log out before trying to log in again.')
+            navigate('/')
+            return
+        }
+
         if (!formData.email.trim() || !formData.password.trim()) {
             setError('Please enter both email and password.')
             return
@@ -52,32 +61,30 @@ export default function LoginPanel() {
 
         setIsSubmitting(true)
 
-        window.setTimeout(async () => {
-            try {
-                const data = await loginUser({ email: formData.email, password: formData.password })
+        try {
+            const data = await loginUser({ email: formData.email, password: formData.password })
 
-                saveAuthSession({
-                    token: data.token,
-                    userId: data.userId,
-                    role: data.role,
-                    userRole: data.userRole,
-                    isAdmin: data.isAdmin,
-                    userName: data.userName,
-                    userEmail: data.userEmail ?? formData.email,
-                })
+            saveAuthSession({
+                token: data.token,
+                userId: data.userId,
+                role: data.role,
+                userRole: data.userRole,
+                isAdmin: data.isAdmin,
+                userName: data.userName,
+                userEmail: data.userEmail ?? formData.email,
+            })
 
-                setSuccess('Login successful. Redirecting to the fleet...')
-                setIsSubmitting(false)
-                navigate('/')
-            } catch (err) {
-                setError(err.message || 'Login failed. Please try again.')
-                setIsSubmitting(false)
-            }
-        }, 400)
+            setSuccess('Login successful. Redirecting to the fleet...')
+            window.setTimeout(() => navigate('/'), 400)
+        } catch (err) {
+            setError(err.message || 'Login failed. Please try again.')
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     return (
-        <main className="auth-page py-5 h-100 pb-0">
+        <main className="app-shell py-5 h-100 pb-0">
             <Navbar />
             <div className="container mt-4 py-4 py-lg-5 vw-100 h-100 d-flex align-items-center justify-content-center">
                 <div className="row justify-content-center align-items-center g-4 g-lg-5">
@@ -90,7 +97,7 @@ export default function LoginPanel() {
                             <p className="lead text-white-50 mb-4">
                                 Sign in to view your reservations, manage bookings, and continue where you left off.
                             </p>
-                            <div className="auth-quick-card rounded-4 border border-secondary border-opacity-25 p-4">
+                            <div className="glass-card rounded-4 border border-secondary border-opacity-25 p-4">
                                 <div className="text-uppercase small text-white-50 fw-semibold mb-2">What you can do</div>
                                 <ul className="list-unstyled mb-0 text-white-75">
                                     <li className="mb-2 ms-2 text-light">View available cars and current pricing</li>
@@ -101,7 +108,7 @@ export default function LoginPanel() {
                         </div>
                     </div>
                     <div className="col-lg-5">
-                        <div className="card auth-card border border-secondary border-opacity-25 shadow-lg bg-black bg-opacity-75 text-white overflow-hidden">
+                        <div className="card glass-card border border-secondary border-opacity-25 shadow-lg bg-black bg-opacity-75 text-white overflow-hidden">
                             <div className="card-body p-4 p-md-5">
                                 <div className="d-flex align-items-center justify-content-between mb-4">
                                     <div>

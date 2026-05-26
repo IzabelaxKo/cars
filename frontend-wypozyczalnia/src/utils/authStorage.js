@@ -2,7 +2,6 @@ const AUTH_KEYS = {
     token: 'token',
     userId: 'userId',
     role: 'role',
-    userRole: 'userRole',
     isAdmin: 'isAdmin',
     userName: 'userName',
     userEmail: 'userEmail',
@@ -42,11 +41,10 @@ export function getAuthValue(key) {
 
 export function isAdminSession() {
     const role = getAuthValue(AUTH_KEYS.role)
-    const userRole = getAuthValue(AUTH_KEYS.userRole)
     const isAdmin = getAuthValue(AUTH_KEYS.isAdmin)
 
-    return role === 'admin' || userRole === 'admin' || isAdmin === 'true'
-}
+    return role === 'admin' || isAdmin === 'true'
+}  
 
 export function clearAuthSession() {
     const storage = getStorage()
@@ -57,6 +55,11 @@ export function clearAuthSession() {
     Object.values(AUTH_KEYS).forEach((key) => {
         storage.removeItem(key)
     })
+}
+
+export function isLoggedIn() {  
+    const token = getAuthValue(AUTH_KEYS.token)
+    return !!token
 }
 
 export { AUTH_KEYS }

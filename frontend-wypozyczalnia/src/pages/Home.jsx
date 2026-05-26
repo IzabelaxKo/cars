@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { isAdminSession } from '../utils/authStorage'
+import { Link, useNavigate } from 'react-router-dom'
+import { isAdminSession, isLoggedIn } from '../utils/authStorage'
+import Navbar from '../components/Navbar'
 
 const apiBaseUrl = 'http://localhost:3000/api'
-
 
 function normalizeCar(car, index) {
     return {
@@ -16,18 +17,32 @@ function normalizeCar(car, index) {
         seats: car.seats ?? 'Unknown seats',
         pricePerDay: car.pricePerDay ?? 'Unknown price',
         status: car.status ? car.status.toUpperCase() : 'Unknown status',
-        imageUrl: car.imageUrl ?? car.img ?? fallbackImageByIndex[index % fallbackImageByIndex.length],
+        imageUrl: car.imageUrl ?? car.img ?? '',
         detailsLink: car._id ? `/cars/${car._id}` : car.detailsLink ?? '#',
-        bookingLink: car._id ? `/booking/${car._id}` : car.bookingLink ?? '#',
+        bookingLink: car._id ? `/reservations?carId=${car._id}` : car.bookingLink ?? '#',
     }
 }
 
 export default function Home() {
+    const navigate = useNavigate()
     const [cars, setCars] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [loadError, setLoadError] = useState('')
-
     const isAdminUser = isAdminSession()
+    const isLoggedInUser = isLoggedIn()
+
+    const handleBookingClick = () => {
+        if (!isLoggedInUser) {
+            alert('Please log in to view your bookings.')
+            navigate('/login')
+            return
+        }
+        if (isAdminUser) {
+            alert('Admin users do not have bookings. Please log in with a regular user account to view bookings.')
+            return
+        }
+        navigate('/panel')
+    }
 
     useEffect(() => {
         const controller = new AbortController()
@@ -67,6 +82,7 @@ export default function Home() {
 
     return (
         <section className="py-5 mt-4 ">
+            <Navbar />
             <div className="container py-4 py-lg-5">
                 <div className="row align-items-center g-4 g-lg-5 mb-5">
                     <div className="col-lg-6">
@@ -80,12 +96,11 @@ export default function Home() {
                             Compare premium vehicles, book in a few clicks, and drive away with transparent daily pricing.
                         </p>
                         <div className="d-flex flex-wrap gap-3 mb-4">
-                            <button className="btn btn-primary btn-lg rounded-pill px-4 fw-semibold">
-                                <a href="#fleet" className='text-light text-decoration-none'>Browse fleet</a>
-                            </button>
-                            <button className="btn btn-outline-secondary btn-lg rounded-pill px-4 fw-semibold text-white border-secondary">
-                                View booking
-                                {/* if not logged in -> show login modal else -> show booking user panel */}
+                            <a href="#fleet" className="btn btn-primary btn-lg rounded-pill px-4 fw-semibold text-light text-decoration-none">
+                                Browse fleet
+                            </a>
+                            <button className="btn btn-outline-secondary btn-lg rounded-pill px-4 fw-semibold text-white border-secondary" onClick={handleBookingClick}>
+                                View bookings
                             </button>
                         </div>
                         <div className="row g-3">
@@ -146,6 +161,8 @@ export default function Home() {
                     </div>
                 </div>
 
+                {loadError ? <div className="alert alert-warning border-0 mb-4">{loadError}</div> : null}
+
                 <div className="d-flex align-items-end justify-content-between flex-wrap gap-3 mb-4">
                     <div>
                         <h2 className="h1 fw-bold text-white mb-2">Available Fleet</h2>
@@ -175,7 +192,6 @@ export default function Home() {
                                                     {car.model} • {car.year}
                                                 </p>
                                             </div>
-                                            <span className="badge text-bg-dark border border-secondary border-opacity-25 rounded-pill">Featured</span>
                                         </div>
 
                                         <div className="d-flex flex-wrap gap-2 mb-4">
@@ -191,12 +207,9 @@ export default function Home() {
                                                 <div className="fs-4 fw-bold">${car.pricePerDay}<span className="fs-6 fw-normal text-white-50">/day</span></div>
                                             </div>
                                             <div className="d-flex gap-2 flex-wrap justify-content-end">
-                                                <a className="btn btn-outline-light rounded-pill px-4 fw-semibold" href={car.detailsLink}>
-                                                    Details
-                                                </a>
-                                                <a className="btn btn-primary rounded-pill px-4 fw-semibold" href={car.bookingLink}>
+                                                <Link className="btn btn-primary rounded-pill px-4 fw-semibold" to={isLoggedInUser ? car.bookingLink : '/login'}>
                                                     Book now
-                                                </a>
+                                                </Link>
                                             </div>
                                         </div>
                                     </div>

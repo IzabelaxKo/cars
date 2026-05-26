@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import { isAdminSession, isLoggedIn } from '../utils/authStorage'
+import { AUTH_KEYS, getAuthValue, isLoggedIn, saveAuthSession } from '../utils/authStorage'
 
 const apiBaseUrl = 'http://localhost:3000/api'
 
@@ -9,8 +9,9 @@ function formatDateInput(value) {
     return value ? String(value).slice(0, 10) : ''
 }
 
-export default function AdminPanel() {
+export default function UserPanel() {
     const navigate = useNavigate()
+    const [userId, setUserId] = useState(getAuthValue(AUTH_KEYS.userId) ?? '')
     const [reservations, setReservations] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
@@ -19,10 +20,42 @@ export default function AdminPanel() {
     const [draftDates, setDraftDates] = useState({ startDate: '', endDate: '' })
 
     const isLoggedInUser = isLoggedIn()
-    const isAdminUser = isAdminSession()
+    const userEmail = getAuthValue(AUTH_KEYS.userEmail) ?? ''
+    const userLabel = getAuthValue(AUTH_KEYS.userName) ?? userEmail ?? 'Signed-in user'
 
     useEffect(() => {
-        if (!isLoggedInUser || !isAdminUser) {
+        if (!isLoggedInUser || userId || !userEmail) {
+            return
+        }
+
+        let cancelled = false
+
+        async function resolveUserId() {
+            try {
+                const response = await fetch(`${apiBaseUrl}/users/email/${encodeURIComponent(userEmail)}`)
+                if (!response.ok) {
+                    return
+                }
+
+                const user = await response.json()
+                if (user?._id && !cancelled) {
+                    setUserId(user._id)
+                    saveAuthSession({ [AUTH_KEYS.userId]: user._id })
+                }
+            } catch {
+                // ignore; the fallback state below is enough
+            }
+        }
+
+        resolveUserId()
+
+        return () => {
+            cancelled = true
+        }
+    }, [isLoggedInUser, userId, userEmail])
+
+    useEffect(() => {
+        if (!isLoggedInUser || !userId) {
             return
         }
 
@@ -30,8 +63,9 @@ export default function AdminPanel() {
 
         async function loadReservations() {
             setLoading(true)
+
             try {
-                const response = await fetch(`${apiBaseUrl}/reservations`, {
+                const response = await fetch(`${apiBaseUrl}/reservations?userId=${encodeURIComponent(userId)}`, {
                     signal: controller.signal,
                 })
 
@@ -55,7 +89,7 @@ export default function AdminPanel() {
         loadReservations()
 
         return () => controller.abort()
-    }, [isLoggedInUser, isAdminUser])
+    }, [isLoggedInUser, userId])
 
     function startEditing(reservation) {
         setEditingId(reservation._id)
@@ -71,7 +105,30 @@ export default function AdminPanel() {
         setDraftDates({ startDate: '', endDate: '' })
     }
 
-    async function handleSaveDates(reservationId) {
+    async function handleDelete(reservationId) {
+        if (!window.confirm('Delete this reservation?')) {
+            return
+        }
+
+        try {
+            const response = await fetch(`${apiBaseUrl}/reservations/${reservationId}`, {
+                method: 'DELETE',
+            })
+
+            if (!response.ok) {
+                throw new Error('Could not delete reservation.')
+            }
+
+            setReservations((current) => current.filter((reservation) => reservation._id !== reservationId))
+            if (editingId === reservationId) {
+                cancelEditing()
+            }
+        } catch (err) {
+            setError(err.message || 'Could not delete reservation.')
+        }
+    }
+
+    async function handleSave(reservationId) {
         if (!draftDates.startDate || !draftDates.endDate) {
             setError('Pick both dates.')
             return
@@ -112,49 +169,18 @@ export default function AdminPanel() {
         }
     }
 
-    async function handleCancelReservation(reservationId) {
-        if (!window.confirm('Cancel this reservation?')) {
-            return
-        }
-
-        try {
-            const response = await fetch(`${apiBaseUrl}/reservations/${reservationId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'cancelled' }),
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}))
-                throw new Error(errorData.message || 'Could not cancel reservation.')
-            }
-
-            const updatedReservation = await response.json()
-            setReservations((current) =>
-                current.map((reservation) => (reservation._id === reservationId ? updatedReservation : reservation))
-            )
-
-            if (editingId === reservationId) {
-                cancelEditing()
-            }
-            setError('')
-        } catch (err) {
-            setError(err.message || 'Could not cancel reservation.')
-        }
-    }
-
-    if (!isLoggedInUser || !isAdminUser) {
+    if (!isLoggedInUser) {
         return (
             <main className="app-shell py-5 h-100 pb-0">
                 <Navbar />
                 <div className="container py-4 py-lg-5 mt-4">
-                    <div className="card glass-card border border-danger border-opacity-50 shadow-lg bg-black bg-opacity-50 text-white">
+                    <div className="card glass-card border border-secondary border-opacity-25 shadow-lg bg-black bg-opacity-50 text-white">
                         <div className="card-body p-4 p-lg-5">
-                            <p className="text-uppercase text-white-50 small fw-semibold mb-2">Admin access only</p>
-                            <h1 className="display-6 fw-bold mb-3">This area is blocked for regular users</h1>
-                            <p className="text-white-50 mb-4">Please sign in with an admin account to manage all reservations.</p>
-                            <button className="btn btn-primary rounded-pill px-4 fw-semibold" onClick={() => navigate('/')}>
-                                Go to main page
+                            <p className="text-uppercase text-white-50 small fw-semibold mb-2">User panel</p>
+                            <h1 className="display-6 fw-bold mb-3">Sign in to see your reservations</h1>
+                            <p className="text-white-50 mb-4">Your bookings, edits, and deletes are shown here after login.</p>
+                            <button className="btn btn-primary rounded-pill px-4 fw-semibold" onClick={() => navigate('/login')}>
+                                Go to login
                             </button>
                         </div>
                     </div>
@@ -170,10 +196,10 @@ export default function AdminPanel() {
                 <div className="row align-items-end g-4 mb-4">
                     <div className="col-lg-8">
                         <span className="badge text-bg-dark border border-secondary border-opacity-25 text-uppercase fw-semibold px-3 py-2 mb-3">
-                            Admin reservations
+                            Your bookings
                         </span>
-                        <h1 className="display-5 fw-bold text-white mb-2">All reservations</h1>
-                        <p className="text-white-50 mb-0">Edit dates or cancel any reservation.</p>
+                        <h1 className="display-5 fw-bold text-white mb-2">Welcome back, {userLabel}</h1>
+                        <p className="text-white-50 mb-0">Manage your car reservations in one place.</p>
                     </div>
                     <div className="col-lg-4 text-lg-end">
                         <div className="card border border-secondary border-opacity-25 bg-black bg-opacity-50 text-white d-inline-flex">
@@ -190,15 +216,14 @@ export default function AdminPanel() {
                 <div className="card glass-card border border-secondary border-opacity-25 shadow-lg bg-black bg-opacity-50 text-white">
                     <div className="card-body p-0">
                         {loading ? (
-                            <div className="p-4 text-white-50">Loading all reservations...</div>
+                            <div className="p-4 text-white-50">Loading your reservations...</div>
                         ) : reservations.length === 0 ? (
-                            <div className="p-4 p-lg-5 text-white-50">There are no reservations yet.</div>
+                            <div className="p-4 p-lg-5 text-white-50">You do not have any reservations yet.</div>
                         ) : (
                             <div className="table-responsive">
                                 <table className="table table-dark table-hover align-middle mb-0 app-table">
                                     <thead>
                                         <tr>
-                                            <th>Customer</th>
                                             <th>Car</th>
                                             <th>Dates</th>
                                             <th>Days</th>
@@ -213,14 +238,9 @@ export default function AdminPanel() {
                                                 ? `${reservation.car.brand ?? ''} ${reservation.car.model ?? ''}`.trim()
                                                 : 'Unknown car'
                                             const isEditing = editingId === reservation._id
-                                            const isCancelled = reservation.status === 'cancelled'
 
                                             return (
                                                 <tr key={reservation._id}>
-                                                    <td>
-                                                        <div className="fw-semibold">{reservation.clientSurname || 'Unknown user'}</div>
-                                                        <div className="text-white-50 small">{reservation.clientUser?.email || 'No email'}</div>
-                                                    </td>
                                                     <td>
                                                         <div className="fw-semibold">{carLabel}</div>
                                                         <div className="text-white-50 small">{reservation.car?.year ?? ''}</div>
@@ -273,7 +293,7 @@ export default function AdminPanel() {
                                                             <div className="d-flex justify-content-end gap-2 flex-wrap">
                                                                 <button
                                                                     className="btn btn-sm btn-primary rounded-pill px-3"
-                                                                    onClick={() => handleSaveDates(reservation._id)}
+                                                                    onClick={() => handleSave(reservation._id)}
                                                                     disabled={savingId === reservation._id}
                                                                 >
                                                                     {savingId === reservation._id ? 'Saving...' : 'Save'}
@@ -290,16 +310,14 @@ export default function AdminPanel() {
                                                                 <button
                                                                     className="btn btn-sm btn-outline-light rounded-pill px-3"
                                                                     onClick={() => startEditing(reservation)}
-                                                                    disabled={isCancelled}
                                                                 >
-                                                                    Edit dates
+                                                                    Edit
                                                                 </button>
                                                                 <button
                                                                     className="btn btn-sm btn-outline-danger rounded-pill px-3"
-                                                                    onClick={() => handleCancelReservation(reservation._id)}
-                                                                    disabled={isCancelled}
+                                                                    onClick={() => handleDelete(reservation._id)}
                                                                 >
-                                                                    {isCancelled ? 'Cancelled' : 'Cancel reservation'}
+                                                                    Delete
                                                                 </button>
                                                             </div>
                                                         )}

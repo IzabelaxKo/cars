@@ -8,6 +8,8 @@ import AdminPanel from './pages/AdminPanel.jsx'
 import LoginPanel from './pages/LoginPanel.jsx'
 import RegisterPanel from './pages/RegisterPanel.jsx'
 import Footer from './components/Footer'
+import ReservationsForm from './pages/ReservationsForm.jsx'
+import UserPanel from './pages/UserPanel.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -19,6 +21,8 @@ createRoot(document.getElementById('root')).render(
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/login" element={<LoginPanel />} />
             <Route path="/register" element={<RegisterPanel />} />
+            <Route path="/reservations" element={<ReservationsForm />} />
+            <Route path="/panel" element={<UserPanel />} />
           </Routes>
         </div>
         <Footer />

@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import { saveAuthSession } from '../utils/authStorage'
+import { isLoggedIn } from '../utils/authStorage'
+
+const apiBaseUrl = 'http://localhost:3000/api'
 
 export default function RegisterPanel() {
     const navigate = useNavigate()
     const [formData, setFormData] = useState({
-        fullName: '',
         email: '',
         password: '',
         confirmPassword: '',
@@ -24,13 +25,34 @@ export default function RegisterPanel() {
         }))
     }
 
-    function handleSubmit(event) {
+    async function registerUser(details) {
+        try {
+            const response = await fetch(`${apiBaseUrl}/users/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(details),
+            })
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.message || 'Registration failed. Please try again.')
+            }
+            return response.json()
+        } catch (error) {
+            throw new Error(error instanceof Error ? error.message : 'An unexpected error occurred.', {
+                cause: error,
+            })
+        }
+    }
+
+    async function handleSubmit(event) {
         event.preventDefault()
         setError('')
         setSuccess('')
 
-        if (!formData.fullName.trim() || !formData.email.trim() || !formData.password.trim() || !formData.confirmPassword.trim()) {
-            setError('Please complete all fields.')
+        if (isLoggedIn()) {
+            setError('You are already logged in.')
+            alert('You are already logged in. Please log out before trying to log in again.')
+            navigate('/')
             return
         }
 
@@ -51,22 +73,24 @@ export default function RegisterPanel() {
 
         setIsSubmitting(true)
 
-        window.setTimeout(() => {
-            saveAuthSession({
-                token: 'user-session-token',
-                role: 'user',
-                userName: formData.fullName.trim(),
-                userEmail: formData.email.trim(),
+        try {
+            await registerUser({
+                email: formData.email,
+                password: formData.password,
             })
 
-            setSuccess('Account created successfully. Redirecting to the fleet...')
+            setSuccess('Account created successfully. Redirecting to login...')
+            window.setTimeout(() => navigate('/login'), 500)
+        } catch (err) {
+            console.error('Registration error:', err)
+            setError(err.message || 'Registration failed. Please try again.')
+        } finally {
             setIsSubmitting(false)
-            navigate('/')
-        }, 500)
+        }
     }
 
     return (
-        <main className="auth-page py-5 h-100 pb-0">
+        <main className="app-shell py-5 h-100 pb-0">
             <Navbar />
             <div className="container py-4 mt-4 mb-4 py-lg-5">
                 <div className="row justify-content-center align-items-center g-4 g-lg-5">
@@ -79,7 +103,7 @@ export default function RegisterPanel() {
                             <p className="lead text-white-50 mb-4">
                                 Register to save your details, book faster, and keep all your reservations in one place.
                             </p>
-                            <div className="auth-quick-card rounded-4 border border-secondary border-opacity-25 p-4">
+                            <div className="glass-card rounded-4 border border-secondary border-opacity-25 p-4">
                                 <div className="text-uppercase small text-white-50 fw-semibold mb-2">Included by default</div>
                                 <ul className="list-unstyled mb-0 text-white-75">
                                     <li className="mb-2 ms-2 text-light">Personal booking history</li>
@@ -91,7 +115,7 @@ export default function RegisterPanel() {
                     </div>
 
                     <div className="col-lg-5 order-lg-1">
-                        <div className="card auth-card border border-secondary border-opacity-25 shadow-lg bg-black bg-opacity-75 text-white overflow-hidden">
+                        <div className="card glass-card border border-secondary border-opacity-25 shadow-lg bg-black bg-opacity-75 text-white overflow-hidden">
                             <div className="card-body p-4 p-md-5">
                                 <div className="d-flex align-items-center justify-content-between mb-4">
                                     <div>
@@ -102,21 +126,6 @@ export default function RegisterPanel() {
                                 </div>
 
                                 <form onSubmit={handleSubmit} className="auth-form">
-                                    <div className="mb-3">
-                                        <label className="form-label text-white-50" htmlFor="fullName">
-                                            Full name
-                                        </label>
-                                        <input
-                                            id="fullName"
-                                            name="fullName"
-                                            type="text"
-                                            className="form-control form-control-lg bg-dark text-white border-secondary"
-                                            placeholder="John Smith"
-                                            value={formData.fullName}
-                                            onChange={handleChange}
-                                            autoComplete="name"
-                                        />
-                                    </div>
 
                                     <div className="mb-3">
                                         <label className="form-label text-white-50" htmlFor="registerEmail">
