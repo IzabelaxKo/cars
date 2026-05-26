@@ -22,11 +22,13 @@ export default function ReservationsForm() {
     const [submitError, setSubmitError] = useState('')
     const [submitSuccess, setSubmitSuccess] = useState('')
     const [resolvedUserId, setResolvedUserId] = useState(getAuthValue(AUTH_KEYS.userId) ?? '')
+    const initialStartDate = searchParams.get('startDate') ?? ''
+    const initialEndDate = searchParams.get('endDate') ?? ''
     const [formData, setFormData] = useState({
         carId: searchParams.get('carId') ?? '',
         clientSurname: getAuthValue(AUTH_KEYS.userName) ?? '',
-        startDate: '',
-        endDate: '',
+        startDate: initialStartDate,
+        endDate: initialEndDate,
     })
 
     const isLoggedInUser = isLoggedIn()
@@ -35,7 +37,6 @@ export default function ReservationsForm() {
     const currentUserLabel = getAuthValue(AUTH_KEYS.userName) ?? currentUserEmail ?? 'Signed-in user'
 
     useEffect(() => {
-        // If user is logged in but we don't have userId, try resolving it from email
         let cancelled = false
         async function resolveUserId() {
             if (!isLoggedInUser || resolvedUserId) return
@@ -48,13 +49,9 @@ export default function ReservationsForm() {
                     setResolvedUserId(user._id)
                     try {
                         saveAuthSession({ [AUTH_KEYS.userId]: user._id })
-                    } catch {
-                        // ignore save errors
-                    }
+                    } catch {  }
                 }
-            } catch {
-                // network error — ignore here, form will show appropriate message on submit
-            }
+            } catch {   }
         }
 
         resolveUserId()

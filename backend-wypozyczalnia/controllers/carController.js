@@ -1,9 +1,25 @@
 const Car = require('../models/Car');
+const Reservation = require('../models/Reservation');
 
 exports.getAllCars = async (req, res) => {
     try {
-        const cars = await Car.find();
-        return res.json(cars);
+        const [cars, reservationCounts] = await Promise.all([
+            Car.find(),
+            Reservation.aggregate([
+                { $group: { _id: '$car', count: { $sum: 1 } } },
+            ]),
+        ]);
+
+        const countByCarId = new Map(
+            reservationCounts.map((entry) => [String(entry._id), entry.count])
+        );
+
+        return res.json(
+            cars.map((car) => ({
+                ...car.toObject(),
+                reservationsCount: countByCarId.get(String(car._id)) ?? car.reservations?.length ?? 0,
+            }))
+        );
     } catch (err) {
         return res.status(500).json({ message: err.message });
     }
@@ -13,7 +29,12 @@ exports.getCarById = async (req, res) => {
     try {
         const car = await Car.findById(req.params.id);
         if (!car) return res.status(404).json({ message: 'Car not found' });
-        res.json(car);
+
+        const reservationCount = await Reservation.countDocuments({ car: car._id });
+        res.json({
+            ...car.toObject(),
+            reservationsCount: reservationCount,
+        });
     } catch (err) {
         res.status(500).json({ message: err.message });
     } 

@@ -17,7 +17,7 @@ function normalizeCar(car, index) {
         gearbox: car.gearbox ?? 'Unknown transmission',
         seats: car.seats ?? 'Unknown seats',
         pricePerDay: car.pricePerDay ?? 'Unknown price',
-        reservationsCount: Array.isArray(car.reservations) ? car.reservations.length : (car.reservations ?? 0),
+        reservationsCount: car.reservationsCount ?? (Array.isArray(car.reservations) ? car.reservations.length : (car.reservations ?? 0)),
         imageUrl: car.imageUrl ?? car.img ?? '',
         detailsLink: car._id ? `/cars/${car._id}` : car.detailsLink ?? '#',
         bookingLink: car._id ? `/reservations?carId=${car._id}` : car.bookingLink ?? '#',
@@ -47,6 +47,8 @@ export default function Home() {
         }
         navigate('/panel')
     }
+
+    const capitalize = (str) => String(str).charAt(0).toUpperCase() + String(str).slice(1);
 
     useEffect(() => {
         const controller = new AbortController()
@@ -167,7 +169,7 @@ export default function Home() {
                 <div className="d-flex align-items-end justify-content-between flex-wrap gap-3 mb-4">
                     <div>
                         <h2 className="h1 fw-bold text-white mb-2">Available Fleet</h2>
-                        <p className="text-white-50 mb-0">Premium cars, transparent pricing, effortless booking.</p>
+                        <p className="text-white-50 mb-0">The best cars, transparent pricing, effortless booking.</p>
                     </div>
                 </div>
                 <div className="row g-4" id='fleet'>
@@ -187,18 +189,18 @@ export default function Home() {
                                     />
                                     <div className="card-body p-4 d-flex flex-column">
                                         <div className="d-flex justify-content-between align-items-start mb-3">
-                                            <div>
-                                                <h3 className="h5 fw-bold mb-1">{car.make}</h3>
+                                            <div className="d-flex gap-2 align-items-center justify-content-between w-100">
+                                                <h3 className="fw-bold mb-2">{car.brand}</h3>
                                                 <p className="text-white-50 mb-0">
-                                                    {car.model} • {car.year}
+                                                     {car.model} • {car.year}
                                                 </p>
                                             </div>
                                         </div>
 
                                         <div className="d-flex flex-wrap gap-2 mb-4">
-                                            <span className="badge text-bg-secondary rounded-pill px-3 py-2 bg-opacity-50">{String(car.gearbox).toUpperCase()}</span>
-                                            <span className="badge text-bg-secondary rounded-pill px-3 py-2 bg-opacity-50">{String(car.fuelType).toUpperCase()}</span>
-                                            <span className="badge text-bg-secondary rounded-pill px-3 py-2 bg-opacity-50">{String(car.category).toUpperCase()}</span>
+                                            <span className="badge text-bg-secondary rounded-pill px-3 py-2 bg-opacity-50">{capitalize(car.gearbox)}</span>
+                                            <span className="badge text-bg-primary rounded-pill px-3 py-2 bg-opacity-50">{capitalize(car.fuelType)}</span>
+                                            <span className="badge text-bg-success rounded-pill px-3 py-2 bg-opacity-50">{capitalize(car.category)}</span>
                                             <span className="badge text-bg-dark border border-secondary border-opacity-25 rounded-pill px-3 py-2 text-capitalize">{car.seats} seats</span>
                                         </div>
 
@@ -212,7 +214,7 @@ export default function Home() {
                                                     <Link className="btn btn-primary rounded-pill px-4 fw-semibold" to={isLoggedInUser ? car.bookingLink : '/login'}>
                                                         Book now
                                                     </Link>
-                                                    <button className="btn btn-outline-secondary rounded-pill px-4 fw-semibold" type="button" onClick={() => setSelectedCar(car)}>
+                                                    <button className="btn btn-outline-light rounded-pill px-4 fw-semibold" type="button" onClick={() => setSelectedCar(car)}>
                                                         Details
                                                     </button>
                                                 </div>

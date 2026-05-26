@@ -64,6 +64,11 @@ exports.addReservation = async (req, res) => {
         });
         await reservation.save();
 
+        if (!car.reservations.some((reservationId) => String(reservationId) === String(reservation._id))) {
+            car.reservations.push(reservation._id);
+            await car.save();
+        }
+
         const today = new Date();
         if (start <= today && today <= end) {
             car.status = 'rented';
@@ -139,8 +144,11 @@ exports.deleteReservation = async (req, res) => {
         const reservation = await Reservation.findByIdAndDelete(req.params.id);
         if (!reservation) return res.status(404).json({ message: 'Reservation not found' });
         const car = await Car.findById(reservation.car._id);
-        car.status = 'available';
-        await car.save();
+        if (car) {
+            car.reservations = car.reservations.filter((reservationId) => String(reservationId) !== String(reservation._id));
+            car.status = 'available';
+            await car.save();
+        }
         res.json({ message: 'Reservation deleted' });
     } catch (err) {
         res.status(500).json({ message: err.message });
