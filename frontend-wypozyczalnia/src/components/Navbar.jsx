@@ -34,10 +34,10 @@ export default function Navbar() {
                     ) : (
                         <>
                             <button 
-                                className="btn btn-outline-light fw-semibold d-flex align-items-center px-1 justify-content-center me-1 h-100"
+                                className="btn btn-outline-primary btn-sm fw-semibold d-flex align-items-center justify-content-center me-1 rounded-circle"
                                 onClick={() => setMenuOpen(!menuOpen)}
                                 aria-label={userName}
-                                style={{ minWidth: '40px'}}
+                                style={{ minWidth: '40px', minHeight: '40px', padding: 0 }}
                             > 👤
                             </button>
                             {menuOpen && (

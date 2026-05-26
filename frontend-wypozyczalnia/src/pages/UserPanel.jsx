@@ -42,9 +42,7 @@ export default function UserPanel() {
                     setUserId(user._id)
                     saveAuthSession({ [AUTH_KEYS.userId]: user._id })
                 }
-            } catch {
-                // ignore; the fallback state below is enough
-            }
+            } catch { }
         }
 
         resolveUserId()
@@ -190,7 +188,7 @@ export default function UserPanel() {
     }
 
     return (
-        <main className="app-shell py-5 h-100 pb-0">
+        <main className="app-shell py-5 h-100 w-100 pb-0">
             <Navbar />
             <div className="container py-4 py-lg-5 mt-4">
                 <div className="row align-items-end g-4 mb-4">
