@@ -10,6 +10,7 @@ app.use(express.json());
 
 const carRoutes = require('./routes/carRoutes');
 const reservationRoutes = require('./routes/reservationRoutes');
+const userRoutes = require('./routes/userRouter');
 
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log('Connected to MongoDB'))
@@ -22,6 +23,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/cars', carRoutes);
 app.use('/api/reservations', reservationRoutes);
+app.use('/api/users', userRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
