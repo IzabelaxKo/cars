@@ -2,24 +2,27 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { isAdminSession, isLoggedIn } from '../utils/authStorage'
 import Navbar from '../components/Navbar'
+import CarDetailsModal from '../components/CarDetailsModal'
 
 const apiBaseUrl = 'http://localhost:3000/api'
 
 function normalizeCar(car, index) {
     return {
         id: car._id ?? car.id ?? index,
-        make: car.brand ?? car.make ?? 'Unknown brand',
+        brand: car.brand ?? car.make ?? 'Unknown brand',
         model: car.model ?? 'Unknown model',
-        category: car.category ?? 'Unknown category',  
+        category: car.category ?? 'Unknown category',
         year: car.year ?? 'Unknown year',
-        fuelType: car.fuelType ? car.fuelType.toUpperCase() : 'Unknown fuel type',
-        gearbox: car.gearbox ? car.gearbox.toUpperCase() : 'Unknown transmission',
+        fuelType: car.fuelType ?? 'Unknown fuel type',
+        gearbox: car.gearbox ?? 'Unknown transmission',
         seats: car.seats ?? 'Unknown seats',
         pricePerDay: car.pricePerDay ?? 'Unknown price',
-        status: car.status ? car.status.toUpperCase() : 'Unknown status',
+        reservationsCount: Array.isArray(car.reservations) ? car.reservations.length : (car.reservations ?? 0),
         imageUrl: car.imageUrl ?? car.img ?? '',
         detailsLink: car._id ? `/cars/${car._id}` : car.detailsLink ?? '#',
         bookingLink: car._id ? `/reservations?carId=${car._id}` : car.bookingLink ?? '#',
+        createdAt: car.createdAt,
+        updatedAt: car.updatedAt,
     }
 }
 
@@ -30,6 +33,7 @@ export default function Home() {
     const [loadError, setLoadError] = useState('')
     const isAdminUser = isAdminSession()
     const isLoggedInUser = isLoggedIn()
+    const [selectedCar, setSelectedCar] = useState(null)
 
     const handleBookingClick = () => {
         if (!isLoggedInUser) {
@@ -86,9 +90,6 @@ export default function Home() {
             <div className="container py-4 py-lg-5">
                 <div className="row align-items-center g-4 g-lg-5 mb-5">
                     <div className="col-lg-6">
-                        <span className="badge text-bg-dark border border-secondary border-opacity-25 text-uppercase fw-semibold px-3 py-2 mb-3">
-                            Premium car rental
-                        </span>
                         <h1 className="display-4 fw-bold text-white mb-3">
                             Rent modern cars without the usual friction.
                         </h1>
@@ -195,10 +196,10 @@ export default function Home() {
                                         </div>
 
                                         <div className="d-flex flex-wrap gap-2 mb-4">
-                                            <span className="badge text-bg-secondary rounded-pill px-3 py-2 bg-opacity-50">{car.gearbox}</span>
-                                            <span className="badge text-bg-secondary rounded-pill px-3 py-2 bg-opacity-50">{car.fuelType}</span>
-                                            <span className="badge text-bg-secondary rounded-pill px-3 py-2 bg-opacity-50">{car.category}</span>
-                                            <span className="badge text-bg-dark border border-secondary border-opacity-25 rounded-pill px-3 py-2 text-capitalize">{car.status}</span>
+                                            <span className="badge text-bg-secondary rounded-pill px-3 py-2 bg-opacity-50">{String(car.gearbox).toUpperCase()}</span>
+                                            <span className="badge text-bg-secondary rounded-pill px-3 py-2 bg-opacity-50">{String(car.fuelType).toUpperCase()}</span>
+                                            <span className="badge text-bg-secondary rounded-pill px-3 py-2 bg-opacity-50">{String(car.category).toUpperCase()}</span>
+                                            <span className="badge text-bg-dark border border-secondary border-opacity-25 rounded-pill px-3 py-2 text-capitalize">{car.seats} seats</span>
                                         </div>
 
                                         <div className="mt-auto d-flex justify-content-between align-items-center gap-3">
@@ -207,9 +208,14 @@ export default function Home() {
                                                 <div className="fs-4 fw-bold">${car.pricePerDay}<span className="fs-6 fw-normal text-white-50">/day</span></div>
                                             </div>
                                             <div className="d-flex gap-2 flex-wrap justify-content-end">
-                                                <Link className="btn btn-primary rounded-pill px-4 fw-semibold" to={isLoggedInUser ? car.bookingLink : '/login'}>
-                                                    Book now
-                                                </Link>
+                                                <div className="d-flex gap-2">
+                                                    <Link className="btn btn-primary rounded-pill px-4 fw-semibold" to={isLoggedInUser ? car.bookingLink : '/login'}>
+                                                        Book now
+                                                    </Link>
+                                                    <button className="btn btn-outline-secondary rounded-pill px-4 fw-semibold" type="button" onClick={() => setSelectedCar(car)}>
+                                                        Details
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -222,6 +228,9 @@ export default function Home() {
                         </div>
                     )}
                 </div>
+                {selectedCar ? (
+                    <CarDetailsModal car={selectedCar} onClose={() => setSelectedCar(null)} isLoggedIn={isLoggedInUser} />
+                ) : null}
             </div>
         </section>
     )

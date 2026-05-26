@@ -3,7 +3,6 @@ const AUTH_KEYS = {
     userId: 'userId',
     role: 'role',
     isAdmin: 'isAdmin',
-    userName: 'userName',
     userEmail: 'userEmail',
 }
 
@@ -60,6 +59,10 @@ export function clearAuthSession() {
 export function isLoggedIn() {  
     const token = getAuthValue(AUTH_KEYS.token)
     return !!token
+}
+
+export function getUserName() {
+    return getAuthValue(AUTH_KEYS.userEmail)
 }
 
 export { AUTH_KEYS }
