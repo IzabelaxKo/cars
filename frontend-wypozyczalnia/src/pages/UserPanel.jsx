@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import ReservationTable from '../components/ReservationTable'
 import { AUTH_KEYS, getAuthValue, isLoggedIn, saveAuthSession } from '../utils/authStorage'
 
 const apiBaseUrl = 'http://localhost:3000/api'
-
-function formatDateInput(value) {
-    return value ? String(value).slice(0, 10) : ''
-}
 
 export default function UserPanel() {
     const navigate = useNavigate()
@@ -73,7 +70,6 @@ export default function UserPanel() {
 
                 const data = await response.json()
                 setReservations(Array.isArray(data) ? data : [])
-                setError('')
             } catch (err) {
                 if (err.name !== 'AbortError') {
                     setReservations([])
@@ -84,6 +80,7 @@ export default function UserPanel() {
             }
         }
 
+        setError('')
         loadReservations()
 
         return () => controller.abort()
@@ -92,8 +89,8 @@ export default function UserPanel() {
     function startEditing(reservation) {
         setEditingId(reservation._id)
         setDraftDates({
-            startDate: formatDateInput(reservation.startDate),
-            endDate: formatDateInput(reservation.endDate),
+            startDate: reservation.startDate ? String(reservation.startDate).slice(0, 10) : '',
+            endDate: reservation.endDate ? String(reservation.endDate).slice(0, 10) : '',
         })
         setError('')
     }
@@ -159,7 +156,6 @@ export default function UserPanel() {
                 current.map((reservation) => (reservation._id === reservationId ? updatedReservation : reservation))
             )
             cancelEditing()
-            setError('')
         } catch (err) {
             setError(err.message || 'Could not update reservation.')
         } finally {
@@ -177,9 +173,7 @@ export default function UserPanel() {
                             <p className="text-uppercase text-white-50 small fw-semibold mb-2">User panel</p>
                             <h1 className="display-6 fw-bold mb-3">Sign in to see your reservations</h1>
                             <p className="text-white-50 mb-4">Your bookings, edits, and deletes are shown here after login.</p>
-                            <button className="btn btn-primary rounded-pill px-4 fw-semibold" onClick={() => navigate('/login')}>
-                                Go to login
-                            </button>
+                            <button className="btn btn-primary rounded-pill px-4 fw-semibold" onClick={() => navigate('/login')}>Go to login</button>
                         </div>
                     </div>
                 </div>
@@ -193,9 +187,7 @@ export default function UserPanel() {
             <div className="container py-4 py-lg-5 mt-4">
                 <div className="row align-items-end g-4 mb-4">
                     <div className="col-lg-8">
-                        <span className="badge text-bg-dark border border-secondary border-opacity-25 text-uppercase fw-semibold px-3 py-2 mb-3">
-                            Your bookings
-                        </span>
+                        <span className="badge text-bg-dark border border-secondary border-opacity-25 text-uppercase fw-semibold px-3 py-2 mb-3">Your bookings</span>
                         <h1 className="display-5 fw-bold text-white mb-2">Welcome back, {userLabel}</h1>
                         <p className="text-white-50 mb-0">Manage your car reservations in one place.</p>
                     </div>
@@ -213,120 +205,20 @@ export default function UserPanel() {
 
                 <div className="card glass-card border border-secondary border-opacity-25 shadow-lg bg-black bg-opacity-50 text-white">
                     <div className="card-body p-0">
-                        {loading ? (
-                            <div className="p-4 text-white-50">Loading your reservations...</div>
-                        ) : reservations.length === 0 ? (
-                            <div className="p-4 p-lg-5 text-white-50">You do not have any reservations yet.</div>
-                        ) : (
-                            <div className="table-responsive">
-                                <table className="table table-dark table-hover align-middle mb-0 app-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Car</th>
-                                            <th>Dates</th>
-                                            <th>Days</th>
-                                            <th>Total</th>
-                                            <th>Status</th>
-                                            <th className="text-end">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {reservations.map((reservation) => {
-                                            const carLabel = reservation.car
-                                                ? `${reservation.car.brand ?? ''} ${reservation.car.model ?? ''}`.trim()
-                                                : 'Unknown car'
-                                            const isEditing = editingId === reservation._id
-
-                                            return (
-                                                <tr key={reservation._id}>
-                                                    <td>
-                                                        <div className="fw-semibold">{carLabel}</div>
-                                                        <div className="text-white-50 small">{reservation.car?.year ?? ''}</div>
-                                                    </td>
-                                                    <td>
-                                                        {isEditing ? (
-                                                            <div className="d-flex flex-column gap-2">
-                                                                <input
-                                                                    type="date"
-                                                                    className="form-control form-control-sm bg-black text-white border-secondary"
-                                                                    value={draftDates.startDate}
-                                                                    onChange={(event) =>
-                                                                        setDraftDates((current) => ({ ...current, startDate: event.target.value }))
-                                                                    }
-                                                                />
-                                                                <input
-                                                                    type="date"
-                                                                    className="form-control form-control-sm bg-black text-white border-secondary"
-                                                                    min={draftDates.startDate || undefined}
-                                                                    value={draftDates.endDate}
-                                                                    onChange={(event) =>
-                                                                        setDraftDates((current) => ({ ...current, endDate: event.target.value }))
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        ) : (
-                                                            <div>
-                                                                <div>{formatDateInput(reservation.startDate)}</div>
-                                                                <div className="text-white-50 small">to {formatDateInput(reservation.endDate)}</div>
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td>{reservation.days}</td>
-                                                    <td>${reservation.totalPrice}</td>
-                                                    <td>
-                                                        <span
-                                                            className={`badge rounded-pill text-uppercase ${
-                                                                reservation.status === 'active'
-                                                                    ? 'text-bg-success'
-                                                                    : reservation.status === 'cancelled'
-                                                                        ? 'text-bg-danger'
-                                                                        : 'text-bg-secondary'
-                                                            }`}
-                                                        >
-                                                            {reservation.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="text-end">
-                                                        {isEditing ? (
-                                                            <div className="d-flex justify-content-end gap-2 flex-wrap">
-                                                                <button
-                                                                    className="btn btn-sm btn-primary rounded-pill px-3"
-                                                                    onClick={() => handleSave(reservation._id)}
-                                                                    disabled={savingId === reservation._id}
-                                                                >
-                                                                    {savingId === reservation._id ? 'Saving...' : 'Save'}
-                                                                </button>
-                                                                <button
-                                                                    className="btn btn-sm btn-outline-light rounded-pill px-3"
-                                                                    onClick={cancelEditing}
-                                                                >
-                                                                    Cancel
-                                                                </button>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="d-flex justify-content-end gap-2 flex-wrap">
-                                                                <button
-                                                                    className="btn btn-sm btn-outline-light rounded-pill px-3"
-                                                                    onClick={() => startEditing(reservation)}
-                                                                >
-                                                                    Edit
-                                                                </button>
-                                                                <button
-                                                                    className="btn btn-sm btn-outline-danger rounded-pill px-3"
-                                                                    onClick={() => handleDelete(reservation._id)}
-                                                                >
-                                                                    Delete
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            )
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                        <ReservationTable
+                            reservations={reservations}
+                            loading={loading}
+                            emptyMessage="You do not have any reservations yet."
+                            editingId={editingId}
+                            savingId={savingId}
+                            draftDates={draftDates}
+                            onDraftChange={(field, value) => setDraftDates((current) => ({ ...current, [field]: value }))}
+                            onStartEdit={startEditing}
+                            onCancelEdit={cancelEditing}
+                            onSaveEdit={handleSave}
+                            onDeleteReservation={handleDelete}
+                            editButtonLabel="Edit"
+                        />
                     </div>
                 </div>
             </div>

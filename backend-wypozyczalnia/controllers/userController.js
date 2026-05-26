@@ -1,9 +1,8 @@
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/User');
 
-const SALT_ROUNDS = 10;
+// Note: bcrypt removed per user request; passwords will be handled plaintext (insecure).
 
 function sanitizeUser(user) {
     if (!user) {
@@ -67,8 +66,7 @@ exports.addUser = async (req, res) => {
     try {
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(400).json({ message: 'Email already in use' });
-        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-        const user = new User({ email, password: hashedPassword, role: 'user' });
+        const user = new User({ email, password, role: 'user' });
         await user.save();
         res.status(201).json(sanitizeUser(user));
     } catch (err) {
@@ -80,9 +78,7 @@ exports.updateUser = async (req, res) => {
     try {
         const updateData = { ...req.body };
 
-        if (updateData.password) {
-            updateData.password = await bcrypt.hash(updateData.password, SALT_ROUNDS);
-        }
+        // Keep password as provided (plaintext) per user request
 
         const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
         if (!user) return res.status(404).json({ message: 'User not found' });
@@ -110,16 +106,9 @@ exports.loginUser = async (req, res) => {
         if (!user) {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
-
-        const passwordMatches = await bcrypt.compare(password, user.password);
-
-        if (!passwordMatches) {
+        // Plaintext comparison (insecure) — matching original insecure behaviour
+        if (password !== user.password) {
             return res.status(401).json({ message: 'Invalid email or password' });
-        }
-
-        if (!user.password.startsWith('$2')) {
-            user.password = await bcrypt.hash(password, SALT_ROUNDS);
-            await user.save();
         }
 
         const token = createToken(user);
