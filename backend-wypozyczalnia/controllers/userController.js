@@ -30,11 +30,11 @@ exports.getUserByEmail = async (req, res) => {
 };
 
 exports.addUser = async (req, res) => {
-    const { email, password, role } = req.body;
+    const { email, password } = req.body;
     try {
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(400).json({ message: 'Email already in use' });
-        const user = new User({ email, password, role });
+        const user = new User({ email, password, role: "user" });
         await user.save();
         res.status(201).json(user);
     } catch (err) {
@@ -70,7 +70,7 @@ exports.loginUser = async (req, res) => {
         if (!user || user.password !== password) {
             return res.status(401).json({ message: 'Invalid email or password' });
         }
-        res.json({ token: 'user-session-token', role: user.role, email: user.email });
+        res.json({ token: 'user-session-token', role: user.role, email: user.email, userId: user._id, userEmail: user.email });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

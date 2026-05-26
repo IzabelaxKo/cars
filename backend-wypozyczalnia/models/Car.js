@@ -9,7 +9,7 @@ const carSchema = new mongoose.Schema({
     gearbox: { type: String, required: true },
     seats: { type: Number, required: true },
     pricePerDay: { type: Number, required: true },
-    status: { type: String, enum: ['available', 'rented'], default: 'available' },
+    reservations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Reservation' }],
     imageUrl: { type: String }
 }, { timestamps: true });
 

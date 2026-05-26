@@ -1,16 +1,11 @@
 const Car = require('../models/Car');
-const sampleCars = require('../data/cars');
 
 exports.getAllCars = async (req, res) => {
     try {
         const cars = await Car.find();
-        if (Array.isArray(cars) && cars.length > 0) {
-            return res.json(cars);
-        }
-
-        return res.json(sampleCars);
+        return res.json(cars);
     } catch (err) {
-        return res.json(sampleCars);
+        return res.status(500).json({ message: err.message });
     }
 };  
 
